@@ -25,7 +25,6 @@ except:
     test = False
 
 
-
 ## Define a mesh
 if is2D:
     problem = 'RT_2D'
@@ -62,7 +61,7 @@ parm_dict = {'gx':gx,
              'mwH':mwH,'mwL':mwL,
              'Runiv':Runiv,'waveLength':waveLength,
              'rho_l':rho_l,'rho_h':rho_h,
-             'delta':2.0* numpy.pi / Npts * 4 }
+             'delta':2.0* numpy.pi / Npts * 4.0 }
 
 # Initialize a simulation object on a mesh
 ss = pyrandaSim(problem,imesh)
@@ -80,7 +79,6 @@ def meanXto3d(pysim,data):
     return tmp
 
 ss.addUserDefinedFunction("xbar",meanXto3d)
-
 
 
 # Define the equations of motion
@@ -161,15 +159,15 @@ bc.const(['Yh'],['xn'],1.0)
 bc.const(['Yh'],['x1'],0.0)
 bc.const(['Yl'],['x1'],1.0)
 bc.const(['Yl'],['xn'],0.0)
-bc.extrap(['rho','Et'],['x1','xn'])
+# bc.extrap(['rho','Et'],['x1','xn'])
 bc.const(['u','v','w'],['x1','xn'],0.0)
 # Sponge BCs
-:leftBC:  = 1.0 - 0.5 * (1.0 + tanh( (meshx-1.0) / .1 ) )
-:rightBC: = 0.5 * (1.0 + tanh( (meshx-8.0) / .1 ) )
-:BC: = numpy.maximum(:leftBC:,:rightBC:)
-:u: = gbar(:u:)*:BC: + :u:*(1.0 - :BC:)
-:rho: = gbar(:rho:)*:BC: + :rho:*(1.0 - :BC:)
-:Et: = gbar(:Et:)*:BC: + :Et:*(1.0 - :BC:)
+#:leftBC:  = 1.0 - 0.5 * (1.0 + tanh( (meshx-1.0) / .1 ) )
+#:rightBC: = 0.5 * (1.0 + tanh( (meshx-8.0) / .1 ) )
+#:BC: = numpy.maximum(:leftBC:,:rightBC:)
+#:u: = gbar(:u:)*:BC: + :u:*(1.0 - :BC:)
+#:rho: = gbar(:rho:)*:BC: + :rho:*(1.0 - :BC:)
+#:Et: = gbar(:Et:)*:BC: + :Et:*(1.0 - :BC:)
 :rhoYh: = :rho:*:Yh:
 :rhoYl: = :rho:*:Yl:
 :rhou: = :rho:*:u:
@@ -186,27 +184,55 @@ ss.EOM(eom,parm_dict)
 ic = """
 :gamma:= 5./3.
 p0     = 1.0
-At     = ( (rho_h - rho_l)/(rho_h + rho_l) )
-u0     = sqrt( abs(gx*At/waveLength) ) * .1
+# At     = ( (rho_h - rho_l)/(rho_h + rho_l) )
+u0     = 0.0 # sqrt( abs(gx*At/waveLength) ) * 0.1 # velocity oscillations deprecated MDW in favor of perturbed surface
+T0     = 1.0
+offset = 1.4*pi + 0.5 * sin(2 * meshy) # surface perturbed with sine wave MDW
 
-# Add interface
-:Yl: = .5 * (1.0-tanh( sqrt(pi)*( meshx - 1.4*pi ) / delta ))
-:Yh: = 1.0 - :Yl:
-:p:  += p0 
+# Add smooth/diffuse interface
+:Yh: = 0.5 * (1.0 + tanh( (meshx-offset) / delta ))
+:Yl: = 1.0 - :Yh:
+
+# Define R mixture
+:mw:        = 1.0 / ( :Yh: / mwH + :Yl: / mwL )
+:R:         = Runiv / :mw:
+R_l = Runiv / mwL
+R_h = Runiv / mwH
+
+# Define analytical solution for pressure for hydrostatic equilibrium (see RTI_dPdZ_init file for derivation)
+A = gx * (R_h + R_l) / (2.0 * Runiv * T0 * R_l * R_h)
+B = gx * delta * (R_l - R_h) / (2.0 * Runiv * T0 * R_l * R_h)
+:p: = p0 * exp(A * (meshx-offset)) * (numpy.cosh( (meshx-offset) / delta ))**(B)
+
+# If no diffuse interface, Yl,Yh are just constants
+# :p: = p0 * exp(( gx * (R_h * :Yl: + R_l * :Yh:) / (2.0 * Runiv * T0 * R_l * R_h)) * (meshx-offset))
+
+# # Pressure initial pressure distribution
+# def P_init(meshx,gx,rho_h,rho_l,offset,p0):
+#     if ( meshx <= offset):
+#         P = p0 + rho_l * gx * (meshx-offset)
+#     if ( meshx > offset):
+#         P = p0 - rho_h * gx * (meshx-offset)
+#     return P
+# Define ideal profile
+# :p: = P_init(meshx,gx,rho_h,rho_l,offset,p0)
 
 # Add oscillations near interface
 wgt = 4*:Yh:*:Yl:
-:v: *= 0.0
-:w: *= 0.0
-:u: = wgt * gbar( (random3D()-0.5)*u0 )
+:v: = 3d(0.0)
+:w: = 3d(0.0)
+:u: = 3d(0.0) # wgt * gbar( (random3D()-0.5)*u0 ) # velocity oscillations deprecated MDW in favor of perturbed surface
 
-:rho:       = rho_h * :Yh: + rho_l * :Yl:
+# Primitive variables
+:T:         = 3d(T0)
+# :T:         = :p: / (:rho: * :R: )
+:rho:       = :p: / ( :R: * :T: ) # rho_h * :Yh: + rho_l * :Yl: # deprecated MDW
+:error:     = ddx(:p:) - :rho:*gx
 :cv:        = :Yh:*CVh + :Yl:*CVl
 :cp:        = :Yh:*CPh + :Yl:*CPl
 :gamma:     = :cp:/:cv:
-:mw:        = 1.0 / ( :Yh: / mwH + :Yl: / mwL )
-:R:         = Runiv / :mw:
-:T:         = :p: / (:rho: * :R: )
+:cs:  = sqrt( :p: / :rho: * :gamma: )
+:dt: = dt.courant(:u:,:v:,:w:,:cs:)
 
 # Form conserved quatities
 :rhoYh: = :rho:*:Yh:
@@ -215,8 +241,6 @@ wgt = 4*:Yh:*:Yl:
 :rhov: = :rho:*:v:
 :rhow: = :rho:*:w:
 :Et:  = :p: / (:gamma:-1.0) + 0.5*:rho:*(:u:*:u: + :v:*:v: + :w:*:w:)
-:cs:  = sqrt( :p: / :rho: * :gamma: )
-:dt: = dt.courant(:u:,:v:,:w:,:cs:)
 """
 
 # Set the initial conditions
@@ -261,7 +285,7 @@ while time < tstop:
         timeW.append( time )
     
     if not test:
-        if ( ss.cycle%viz_freq == 0 ) :
+        if (ss.cycle%viz_freq == 0 ) : #True) : # replace with True to plot each timestep
 
             # 2D contour plots
             ss.plot.figure(1)
@@ -269,8 +293,17 @@ while time < tstop:
             ss.plot.contourf( 'rho', 32, cmap='jet')
 
             ss.plot.figure(2)
+            ss.plot.clf() # comment these lines to have each timestep plot overlayed
+            ss.plot.plot('error')
+
+            ss.plot.figure(3)
             ss.plot.clf()
-            ss.plot.plot('mix')
+            ss.plot.plot('p')
+
+            ss.plot.figure(4)
+            ss.plot.clf()
+            ss.plot.plot('rho')
+            # input('stop here') # uncomment to stop after each cyle
 
             
         if ( ss.cycle%dmp_freq == 0) :
