@@ -200,12 +200,12 @@ R_l = Runiv / mwL
 R_h = Runiv / mwH
 
 # Define analytical solution for pressure for hydrostatic equilibrium (see RTI_dPdZ_init file for derivation)
-A = gx * (R_h + R_l) / (2.0 * Runiv * T0 * R_l * R_h)
-B = gx * delta * (R_l - R_h) / (2.0 * Runiv * T0 * R_l * R_h)
+A = gx * (R_h + R_l) / (2.0 * T0 * R_l * R_h)
+B = gx * delta * (R_l - R_h) / (2.0 * T0 * R_l * R_h)
 :p: = p0 * exp(A * (meshx-offset)) * (numpy.cosh( (meshx-offset) / delta ))**(B)
 
 # If no diffuse interface, Yl,Yh are just constants
-# :p: = p0 * exp(( gx * (R_h * :Yl: + R_l * :Yh:) / (2.0 * Runiv * T0 * R_l * R_h)) * (meshx-offset))
+# :p: = p0 * exp(( gx * (R_h * :Yl: + R_l * :Yh:) / (2.0 * T0 * R_l * R_h)) * (meshx-offset))
 
 # # Pressure initial pressure distribution
 # def P_init(meshx,gx,rho_h,rho_l,offset,p0):
