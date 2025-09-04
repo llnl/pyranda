@@ -34,9 +34,10 @@ intel.fflags = -fPIC -O3 -cpp
 # it's likely that mpiclang is using gfortran
 clang.fflags = $(gnu.fflags)
 ibm.linkflags = -qoffload -W@,-v -qsmp=omp -qinfo=omperrtrace
-ibm.fflags   = -fPIC -qxlf2003=polymorphic $(ibm.linkflags) -qsuffix=cpp=f90:f=f90 
+ibm.fflags   = -fPIC -qxlf2003=polymorphic $(ibm.linkflags) -qsuffix=cpp=f90:f=f90
 ibm.lopts    = -qmkshrobj
 pgi.fflags   = -fPIC
+cray.fflags  = -ffree -efF -fPIC
 
 sys_type = $(call use-if,$(SYS_TYPE),$(shell uname))
 python  ?= $(call use-if,$($(compiler).$(sys_type).python),$(shell which python))
@@ -56,8 +57,9 @@ python.Iflags  = -I$(shell $(python) -c "from sysconfig import get_config_var; p
 python.libdir  = $(shell $(python) -c "from sysconfig import get_config_var; print(get_config_var('LIBDIR'))")
 python.version = $(shell $(python) -c "from sysconfig import get_config_var; print(get_config_var('VERSION'))")
 python.abiflag = $(shell $(python) -c "import sys; print(getattr(sys,'abiflags',''))")
+# TODO: how should we do this so it's portable?
 #python.Lflags  = -L$(python.libdir) -Wl,-R$(python.libdir)
-python.Lflags  = -L$(python.libdir) -Wl,-rpath $(python.libdir)
+python.Lflags  = -L$(python.libdir) -Wl,-rpath=$(python.libdir)
 python.lflags  = -lpython$(python.version)$(python.abiflag)
 
 numpy.dir    = $(shell $(python) -c "import numpy; print(numpy.__path__[0])")
@@ -79,8 +81,9 @@ vpath %.c $(f2py.dir)
 %.o: %.f90
 	$(mpif90) $(fflags) -c $<
 
+# TODO: is `-Wno-implicit...` portable?
 %.o: %.c
-	$(mpicc) -fPIC $(python.Iflags) $(numpy.Iflags) $(f2py.Iflags) -c $^
+	$(mpicc) -fPIC $(python.Iflags) $(numpy.Iflags) $(f2py.Iflags) -Wno-implicit-function-declaration -c $^
 
 all: parcop.so test_pent
 

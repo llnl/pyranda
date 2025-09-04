@@ -46,6 +46,8 @@ You can also verify that you're in your venv by checking your `$PATH`:
 pip install . [--user]
 ```
 
+###
+
 ## Installing without pip
 
 ```
@@ -53,27 +55,30 @@ pip install . [--user]
 python setup.py install
 ```
 
-
 ## Legacy Instructions - Manual Install
-This process should work on any system and will allow for an arbitrary compiler to be used for 
+This process should work on any system and will allow for an arbitrary compiler to be used for
 the fortran and for the mpi4py.
 
 ### Step 1: Ensure python and numpy
-#### Python-
+
+#### Python
 Though other versions of python may very well work, we recommend and support
 python 2.7, 3.5, and 3.6 for pyranda.
-#### numpy-
+
+#### numpy
 As long as numpy is working with your version of python above, there will be no
 compability issues.  This can be installed in a number of ways. http://www.numpy.org
 
 ### Step 2: Custom install of mpi4py
 This python package provides MPI bindings to python and may or may not exists on your system
 and python path.
+
 #### Install mpi4py (this should work on most systems with a mpi compiler installed)
 ```
-wget https://bitbucket.org/mpi4py/mpi4py/downloads/mpi4py-3.0.0.tar.gz
-tar xvzf mpi4py-3.0.0.tar.gz
-cd mpi4py*
+export version=4.1.0
+wget https://github.com/mpi4py/mpi4py/releases/download/$version/mpi4py-$version.tar.gz
+tar xvzf mpi4py-$version.tar.gz
+cd mpi4py-$version
 python setup.py build --mpicc=/where/you/have/mpicc
 python setup.py install --prefix=install_location_mpi4py
 ```
@@ -81,7 +86,7 @@ python setup.py install --prefix=install_location_mpi4py
 ** Add install_location_mpi4py/*/site_packages to PYTHONPATH **
 
 ### Step 3: Pyranda build/install
-A fortran compiler compatible with the mpicc used in mpi4py is used by default.  
+A fortran compiler compatible with the mpicc used in mpi4py is used by default.
 2003 and above standards enforced and MPI libraries is required.
 ### Install pyranda
 ```
@@ -98,4 +103,3 @@ Trying navigating to pyranda/examples and running
 ```
 python advection.py
 ```
-

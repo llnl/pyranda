@@ -12,5 +12,6 @@ echo $info | grep -i "ibm" > /dev/null && { echo "ibm"; exit 0; }
 echo $info | grep -i "pgi" > /dev/null && { echo "pgi"; exit 0; }
 echo $info | grep -i "clang" > /dev/null && { echo "clang"; exit 0; }
 echo $info | grep -iE "gnu|gcc" > /dev/null && { echo "gnu"; exit 0; }
+echo $info | grep -i "cray" > /dev/null && { echo "cray"; exit 0; }
 
 echo $default
