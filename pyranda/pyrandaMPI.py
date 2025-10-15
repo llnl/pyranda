@@ -663,17 +663,26 @@ class pyrandaMPI():
 
 class parcop_der:
 
-    def __init__(self):        
+    def __init__(self):
         pass
 
-    def ddx(self,val):        
+    def ddx(self,val):
         return parcop.parcop.ddx( val )
 
-    def ddy(self,val):        
+    def ddy(self,val):
         return parcop.parcop.ddy( val )
 
-    def ddz(self,val):        
+    def ddz(self,val):
         return parcop.parcop.ddz(  val )
+
+    def interp_z2fx(self,val):
+        return parcop.parcop.interp_z2fx( val )
+
+    def interp_z2fy(self,val):
+        return parcop.parcop.interp_z2fy( val )
+
+    def interp_z2fz(self,val):
+        return parcop.parcop.interp_z2fz( val )
 
     def dd4x(self,val):
         return parcop.parcop.dd4x(  val )

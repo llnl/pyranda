@@ -618,6 +618,21 @@ class pyrandaSim:
         if self.nz <= 1:
             return 0.0
         return self.PyMPI.der.ddz( val )
+        
+    def interp_z2fx(self,val):
+        if self.nx <= 1:
+            return val
+        return self.PyMPI.der.interp_z2fx( val )
+
+    def interp_z2fy(self,val):
+        if self.ny <= 1:
+            return val
+        return self.PyMPI.der.interp_z2fy( val )
+
+    def interp_z2fz(self,val):
+        if self.nz <= 1:
+            return val
+        return self.PyMPI.der.interp_z2fz( val )
 
     def dd4x(self,val):
         return self.PyMPI.der.dd4x( val )
@@ -819,6 +834,9 @@ class pyrandaSim:
         sMap['ddx(' ] = 'self.ddx('
         sMap['ddy(' ] = 'self.ddy('
         sMap['ddz(' ] = 'self.ddz('
+        sMap['iz2fx(' ] = 'self.interp_z2fx('
+        sMap['iz2fy(' ] = 'self.interp_z2fy('
+        sMap['iz2fz(' ] = 'self.interp_z2fz('
         sMap['fbar('] = 'self.filter('
         sMap['gbar('] = 'self.gfilter('
         sMap['gbarx('] = 'self.gfilterx('

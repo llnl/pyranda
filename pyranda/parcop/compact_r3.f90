@@ -56,10 +56,10 @@ contains
       RETURN
     END IF
     !ax = size(v,1) ; ay = size(v,2) ; az = size(v,3)
-    if( ax /= op%m ) then
-      print *,'*** error: mismatch in x operation size ***',ax,op%m
-      stop
-    endif
+    !if( ax /= op%m ) then
+    !  print *,'*** error: mismatch in x operation size ***',ax,op%m
+    !  stop
+    !endif
     if( op%nor /= 3 ) then
       print *,'*** error: mismatch in x stencil size ***',3,op%nor
       stop

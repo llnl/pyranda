@@ -12,7 +12,7 @@ MODULE parcop
 
   USE LES_objects
   USE LES_comm, ONLY : LES_comm_world
-  USE LES_compact_operators, ONLY : d1x,d1y,d1z,d4x,d4y,d4z,d8x,d8y,d8z
+  USE LES_compact_operators, ONLY : d1x,d1y,d1z,d4x,d4y,d4z,d8x,d8y,d8z,icfx,icfy,icfz
   USE LES_operators, ONLY : div,grad,Laplacian
   USE LES_operators, ONLY : curl,cross,filter,ring,ringV,filterGdir
   USE LES_operators, ONLY : get_rands_normal, filtRands
@@ -473,5 +473,34 @@ MODULE parcop
   END SUBROUTINE TBL_filter
 
 
-END MODULE parcop
+    SUBROUTINE interp_z2fx(val,ival,nx,ny,nz)
+      IMPLICIT NONE
+      INTEGER,               INTENT(IN) :: nx,ny,nz
+      real(kind=8), dimension(nx,ny,nz), intent(in) :: val
+      real(kind=8), dimension(nx,ny,nz),intent(out) :: ival
 
+      CALL icfx(val,ival)
+
+    END SUBROUTINE interp_z2fx
+
+    SUBROUTINE interp_z2fy(val,ival,nx,ny,nz)
+      IMPLICIT NONE
+      INTEGER,               INTENT(IN) :: nx,ny,nz
+      real(kind=8), dimension(nx,ny,nz), intent(in) :: val
+      real(kind=8), dimension(nx,ny,nz),intent(out) :: ival
+      
+      CALL icfy(val,ival)
+
+    END SUBROUTINE interp_z2fy
+    
+    SUBROUTINE interp_z2fz(val,ival,nx,ny,nz)
+      IMPLICIT NONE
+      INTEGER,               INTENT(IN) :: nx,ny,nz
+      real(kind=8), dimension(nx,ny,nz), intent(in) :: val
+      real(kind=8), dimension(nx,ny,nz),intent(out) :: ival
+      
+      CALL icfz(val,ival)
+
+    END SUBROUTINE interp_z2fz
+
+END MODULE parcop

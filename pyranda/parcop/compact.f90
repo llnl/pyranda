@@ -26,7 +26,7 @@ module LES_compact
   TYPE control_type  ! from input or samrai
     LOGICAL(c_bool) :: null_opx=.false.,null_opy=.false.,null_opz=.false.    ! skip operations
     integer(c_int) :: d1spec=1,d2spec=1,d4spec=1,d8spec=1,gfspec=6,sfspec=2,tfspec=8  ! compact scheme
-    integer(c_int) :: islspec=1,isrspec=2
+    integer(c_int) :: islspec=1,isrspec=2,imcfspec=1
     INTEGER(c_int) :: directcom = 1  ! parallel solve
   END TYPE control_type
   
@@ -41,6 +41,7 @@ module LES_compact
     type(compact_op1_r3), dimension(2) :: d4x,d4y,d4z
     type(compact_op1_r4), dimension(2) :: d8x,d8y,d8z
     type(compact_op1_r4), dimension(2) :: gfx,gfy,gfz, sfx,sfy,sfz, tfx,tfy,tfz  ! gaussian, spectral, tophat filters
+    type(compact_op1_r3), dimension(2) :: icfx,icfy,icfz
   contains
     procedure :: setup => setup_compact_ops
     procedure :: remove => remove_compact_ops
@@ -115,7 +116,8 @@ contains
       if( null_op ) cycle
       call cops%d1x(n)%setup(weight,xcom,xmsh,cops%mbc(:,1,n),null_opx)
       cops%d1x(n)%directcom = directcom
-      if( spew .and. .not. cops%d1x(n)%null_op ) print *,n,'setting up compact d1x ',weight%description%name,' for ',xmsh%bc1,' ',xmsh%bcn
+      !if( spew .and. .not. cops%d1x(n)%null_op ) 
+      print *,n,'setting up compact d1x ',weight%description%name,' for ',xmsh%bc1,' ',xmsh%bcn
     end do
     do n=1,cops%nop(2)
       cops%d1y(n)%null_op = null_op
@@ -311,7 +313,36 @@ contains
       cops%tfz(n)%directcom = directcom
       if( spew .and. .not. cops%tfz(n)%null_op ) print *,n,'setting up compact tfz ',weight%description%name,' for ',zmsh%bc1,' ',zmsh%bcn
     end do
+   
+    ! High-order interpolation (zone to face)
+    spec = cops%control%imcfspec
+    null_op = .false.
+    weight => compact_weight_imcf(spec)
     
+    do n=1,cops%nop(1)
+      cops%icfx(n)%null_op = null_op
+      if( null_op ) cycle
+      call cops%icfx(n)%setup(weight,xcom,xmsh,cops%mbc(:,1,n),null_opx)
+      cops%icfx(n)%directcom = directcom
+      !if( spew .and. .not. cops%icfx(n)%null_op ) 
+      print *,n,'setting up compact icfx ',weight%description%name,' for ',xmsh%bc1,' ',xmsh%bcn
+    end do
+    do n=1,cops%nop(2)
+      cops%icfy(n)%null_op = null_op
+      if( null_op ) cycle
+      call cops%icfy(n)%setup(weight,ycom,ymsh,cops%mbc(:,2,n),null_opy)
+      cops%icfy(n)%directcom = directcom
+      if( spew .and. .not. cops%icfy(n)%null_op ) print *,n,'setting up compact tfy ',weight%description%name,' for ',ymsh%bc1,' ',ymsh%bcn
+    end do
+    do n=1,cops%nop(3)
+      cops%icfz(n)%null_op = null_op
+      if( null_op ) cycle
+      call cops%icfz(n)%setup(weight,zcom,zmsh,cops%mbc(:,3,n),null_opz)
+      cops%icfz(n)%directcom = directcom
+      if( spew .and. .not. cops%icfz(n)%null_op ) print *,n,'setting up compact tfz ',weight%description%name,' for ',zmsh%bc1,' ',zmsh%bcn
+    end do
+
+
     ! Allocate scratchpad for compact operations
     if(patch_level==0 .and. patch_num==0) then	! Am I on the base patch?
       CALL setup_ghost_buffers(patch)

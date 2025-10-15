@@ -48,9 +48,10 @@ module LES_stencils
   TYPE(compact_weight), target :: compact_weight_d8(nderiv8)
   INTEGER(c_int), PARAMETER :: nfilter=11
   TYPE(compact_weight), target :: compact_weight_ff(nfilter)
-#if 0
+
   INTEGER(c_int), PARAMETER :: nimcf=1
   TYPE(compact_weight), target :: compact_weight_imcf(nimcf)
+#if 0
   INTEGER(c_int), PARAMETER :: nimfc=1
   TYPE(compact_weight), target :: compact_weight_imfc(nimfc)
   INTEGER(c_int), PARAMETER :: nis=2 ! usually left and right shifts
@@ -132,8 +133,8 @@ contains
     call cgfc3(compact_weight_ff(9))  ! gaussian filter (3pt)
     call cgfs3(compact_weight_ff(10)) ! gaussian filter (3pt)
     call ecfs3(compact_weight_ff(11)) ! 6th order conservative (exp) filter
-#if 0
     call c10imcf(compact_weight_imcf(1))  ! center-to-face midpoint interpolation
+#if 0
     call c10imfc(compact_weight_imfc(1))  ! face-to-center midpoint interpolation
     do s = 1,nis
       call c10ish(compact_weight_ish(s),shift(s))  ! interpolation w/ arbitrary shift
@@ -192,8 +193,8 @@ contains
     do s=1,nfilter
       call compact_weight_ff(s)%remove()
     end do
-#if 0
     call compact_weight_imcf(1)%remove()
+#if 0
     call compact_weight_imfc(1)%remove()
     do s = 1,nis
       call compact_weight_ish(s)%remove()
@@ -1905,7 +1906,7 @@ subroutine cgfc3(d1)  ! setup 3 point gaussian filter
     ff%arb2(5,:,:) = ff%arb2(5,:,:)-ff%alb2(1,:,:)
   end subroutine ctfs4
 
-#if 0
+
   subroutine c10imcf(im)  ! setup compact 10th order center-to-face interpolation weights
     implicit none
     TYPE(compact_weight), intent(out) :: im
@@ -1914,6 +1915,7 @@ subroutine cgfc3(d1)  ! setup 3 point gaussian filter
     INTEGER(c_int), PARAMETER :: nst = 1, nbc1 = 4, nbc2 = 4
     LOGICAL(c_bool),PARAMETER :: implicit_op = .true.
     INTEGER :: i,j,k
+    DOUBLE PRECISION :: alpha, beta, aa, bb, cc
     allocate( im%ali(ncl) )
     allocate( im%ari(ncr) )
     allocate( im%alb1(ncl,nbc1,-1:2), im%alb2(ncl,nbc2,-1:2) )
@@ -1923,13 +1925,31 @@ subroutine cgfc3(d1)  ! setup 3 point gaussian filter
     if( verbose) call im%description%info()
     im%nol = nol ; im%nor = nor ; im%nir = nir ; im%ncl = ncl ; im%ncr = ncr ; im%nci = nci
     im%nst = nst ; im%nbc1 = nbc1 ; im%nbc2 = nbc2
-    im%null_option = 2 ! ?? if null_op
+    im%null_option = 1 ! ?? if null_op  ! BJO, what is
     im%implicit_op = implicit_op
     if( nol == 0 ) im%implicit_op = .false.
     im%sh = -0.5d0  ! shift
   ! interior weights
-    im%ali = [ 0.01953125d0  , 0.234375d0    , 0.4921875d0   , 0.234375d0   , 0.01953125d0 ]
-    im%ari = [ 0.001953125d0 , 0.087890625d0 , 0.41015625d0  , 0.41015625d0 , 0.087890625d0 , 0.001953125d0 ]
+    !im%ali = [ 0.01953125d0  , 0.234375d0    , 0.4921875d0   , 0.234375d0   , 0.01953125d0 ]
+    !im%ari = [ 0.001953125d0 , 0.087890625d0 , 0.41015625d0  , 0.41015625d0 , 0.087890625d0 , 0.001953125d0 ]
+    ! Direct from Lele
+    alpha = 10.0D0/21.0D0
+    beta = 5.0D0 / 126.0d0
+    aa = 5.0D0 / 3.0D0
+    bb = 5.0D0 / 14.0D0
+    cc = 1.0D0 / 126.0D0
+    ! Parameterized a,b,c
+    alpha = 0.0D0 !0.4D0
+    beta = 0.0D0 !(14.0D0 * alpha - 5.0D0)/42.0D0
+    aa = 1.0D0 / 64.0D0 * ( 75.0D0 + 75.0D0*alpha - 42.0D0*beta)
+    bb = 1.0D0 / 128.0D0 * (270.0D0*beta + 126.0D0*alpha - 25.0D0)
+    cc = 1.0D0 / 128.0D0 * (70.0D0*beta - 10.0D0*alpha + 3.0D0)
+
+    im%ali = [ beta  , alpha    , 1.0D0   , alpha   , beta ]
+    im%ari = [ cc/2.0D0 , bb/2.0D0 , aa/2.0D0  , aa/2.0D0 , bb/2.0D0 , cc/2.0D0 ]
+    ! 2nd order for testing
+    !im%ali = [ 0.0d0  , 0.0d0    , 1.0d0  , 0.0d0   , 0.0d0 ]
+    !im%ari = [ 0.0d0 , 0.0d0 , 0.5d0  , 0.5d0 , 0.0d0 , 0.0d0 ]
   ! one-sided weights, band-diagonal style
     im%alb1(:,1,0) = [ 0.0D0         , 0.0D0      , 1.0D0       , 0.0D0      , 0.0D0 ] ! explicit
     im%alb1(:,2,0) = [ 0.0D0         , 0.0d0      , 1.0d0       , 0.0d0      , 0.0D0 ] ! explicit
@@ -1976,6 +1996,7 @@ subroutine cgfc3(d1)  ! setup 3 point gaussian filter
     im%arb2(:,4,2) = im%arb1(ncr:1:-1,1,2)
   end subroutine c10imcf
 
+#if 0
   subroutine c10imfc(im)  ! setup compact 10th order center-to-face interpolation weights
     implicit none
     TYPE(compact_weight), intent(out) :: im

@@ -498,5 +498,77 @@ contains
 
 
 
+  SUBROUTINE icfx(v, iv, bc, vb1, vb2, iv1, iv2)
+    IMPLICIT NONE
+    REAL(kind=C_DOUBLE), DIMENSION(:, :, :), INTENT(in) :: v
+    REAL(kind=C_DOUBLE), DIMENSION(:, :, :), INTENT(out) :: iv
+    REAL(kind=C_DOUBLE), DIMENSION(:, :, :), INTENT(in), OPTIONAL :: vb1, vb2 ! ghost values
+    REAL(kind=C_DOUBLE), DIMENSION(:, :), INTENT(in), OPTIONAL :: iv1, iv2 ! boundary values
+    INTEGER(C_INT), INTENT(in), OPTIONAL :: bc
+    integer(c_int) :: iop,i,j,k,ax,ay,az
+    ax=size(v,1); ay=size(v,2); az=size(v,3)
+    ! perform operation?
+    IF (compact_ops%control%null_opx) THEN
+!      iv = zero  ! ?
+       RETURN
+    END IF
+    ! symmetry option
+    iop = 1
+    IF (PRESENT(bc)) THEN
+       IF (bc > 0) iop = bc
+       IF (bc == -1 .AND. ASSOCIATED(compact_ops%icfx(2)%ar)) iop = 2
+    END IF
+    call compact_ops%icfx(iop)%evalx(ax,ay,az,v, iv, vb1, vb2, iv1, iv2)
+ END SUBROUTINE icfx
+
+ SUBROUTINE icfy(v, iv, bc, vb1, vb2, iv1, iv2)
+    IMPLICIT NONE
+    REAL(kind=C_DOUBLE), DIMENSION(:, :, :), INTENT(in) :: v
+    REAL(kind=C_DOUBLE), DIMENSION(:, :, :), INTENT(out) :: iv
+    REAL(kind=C_DOUBLE), DIMENSION(:, :, :), INTENT(in), OPTIONAL :: vb1, vb2 ! ghost values
+    REAL(kind=C_DOUBLE), DIMENSION(:, :), INTENT(in), OPTIONAL :: iv1, iv2 ! boundary values
+    INTEGER(C_INT), INTENT(in), OPTIONAL :: bc
+    integer(c_int) :: iop,i,j,k,ax,ay,az
+    ax=size(v,1); ay=size(v,2); az=size(v,3)
+    ! perform operation?
+    IF (compact_ops%control%null_opy) THEN
+!      iv = zero  ! ?
+       RETURN
+    END IF
+    ! symmetry option
+    iop = 1
+    IF (PRESENT(bc)) THEN
+       IF (bc > 0) iop = bc
+       IF (bc == -1 .AND. ASSOCIATED(compact_ops%icfy(2)%ar)) iop = 2
+    END IF
+    call compact_ops%icfy(iop)%evaly(ax,ay,az,v, iv, vb1, vb2, iv1, iv2)
+ END SUBROUTINE icfy
+
+ SUBROUTINE icfz(v, iv, bc, vb1, vb2, iv1, iv2)
+    IMPLICIT NONE
+    REAL(kind=C_DOUBLE), DIMENSION(:, :, :), INTENT(in) :: v
+    REAL(kind=C_DOUBLE), DIMENSION(:, :, :), INTENT(out) :: iv
+    REAL(kind=C_DOUBLE), DIMENSION(:, :, :), INTENT(in), OPTIONAL :: vb1, vb2 ! ghost values
+    REAL(kind=C_DOUBLE), DIMENSION(:, :), INTENT(in), OPTIONAL :: iv1, iv2 ! boundary values
+    INTEGER(C_INT), INTENT(in), OPTIONAL :: bc
+    integer(c_int) :: iop,i,j,k,ax,ay,az
+    ax=size(v,1); ay=size(v,2); az=size(v,3)
+    ! perform operation?
+    IF (compact_ops%control%null_opz) THEN
+!      iv = zero  ! ?
+       RETURN
+    END IF
+    ! symmetry option
+    iop = 1
+    IF (PRESENT(bc)) THEN
+       IF (bc > 0) iop = bc
+       IF (bc == -1 .AND. ASSOCIATED(compact_ops%icfz(2)%ar)) iop = 2
+    END IF
+    call compact_ops%icfz(iop)%evalz(ax,ay,az,v, iv, vb1, vb2, iv1, iv2)
+ END SUBROUTINE icfz
+
+
+
+
 end module LES_compact_operators
 
