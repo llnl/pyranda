@@ -8,23 +8,23 @@ jobs:
         python-version: [3.7, 3.8, 3.9]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Maybe use cached MPI
         id: cache-mpi
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/mpi
           # NOTE: without the `-v2' an empty cache dir will be used because the initial caching
           # of ~/mpi was incorrect. caches cannot be cleared:
           # https://github.com/actions/cache/issues/2
           key: ${{ runner.os }}-${{ matrix.mpi }}-v2
-      - name: Maybe build ${{ matrix.MPI }}
+      - name: Maybe build ${{ matrix.mpi }}
         if: steps.cache-mpi.outputs.cache-hit != 'true'
-        run: bash ./.github/scripts/install-mpi.sh ${{ matrix.MPI }} ~/mpi
+        run: bash ./.github/scripts/install-mpi.sh ${{ matrix.mpi }} ~/mpi
       - name: Add mpi to path
         run: echo "PATH=$HOME/mpi/bin:$PATH" >> $GITHUB_ENV
       - name: Install Python Requirements
@@ -36,4 +36,4 @@ jobs:
           python setup.py build
           python setup.py install
       - name: Run Regression Tests
-        run: cd tests && python run_tests.py 1
+        run: python tests/run_tests.py 1
