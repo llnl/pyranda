@@ -185,14 +185,16 @@ class pyrandaSim:
         return self.variables['meshz']
         
     def eval(self,expression):
-        return eval(fortran3d(expression,self.sMap))
+        local_scope = {'self': self}
+        return eval(fortran3d(expression,self.sMap), globals(), local_scope)
 
     def parse(self,expression,parseDict=None):
 
         if parseDict:
             expression = self.updateStringFromDictionary( expression, parseDict, "parse")
         
-        exec(fortran3d(expression,self.sMap))
+        local_scope = {'self': self}
+        exec(fortran3d(expression,self.sMap), globals(), local_scope)
     
     def addVar(self,name,kind=None,rank='scalar'):
         if name not in self.variables:
@@ -341,6 +343,7 @@ class pyrandaSim:
             return        
         
         # Actually compute the Initial Conditions
+        local_scope = {'self': self}
         for ic in ic_lines:
             ic_mod = ic #+ '+self.emptyScalar()'
 
@@ -348,7 +351,7 @@ class pyrandaSim:
                 self.iprint( ic )
                 
             try:
-                exec(fortran3d(ic_mod,self.sMap))
+                exec(fortran3d(ic_mod,self.sMap), globals(), local_scope)
             except Exception as e:
                 self.iprint("Error: cant parse following string from ICs")
                 self.iprint(ic_mod)

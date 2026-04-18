@@ -37,8 +37,9 @@ class pyrandaMesh:
 
         self.options = defaultMeshOptions()
         self.get_sMap()
+        local_scope = {'self': self}
         for msl in meshStrLines:
-            exec( fortran3d(msl,self.sMap) )
+            exec(fortran3d(msl,self.sMap), globals(), local_scope)
         
         
     def set_options(self,ind,x1,xn,nn,periodic=False):
