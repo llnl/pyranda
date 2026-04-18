@@ -16,6 +16,21 @@ pip install mpi4py --no-cache-dir
 env MPICC=/path/to/your/mpi pip install mpi4py --no-cache-dir
 ```
 
+On `toss_4_x86_64`, use [scripts/toss_4_x86_64_ib_cray.sh](/usr/WS2/olson45/SAND/pyranda-codex/scripts/toss_4_x86_64_ib_cray.sh) instead of a plain `pip install mpi4py`. The script:
+
+- prefers a local `mpi4py-<version>.tar.gz` before downloading anything,
+- builds `mpi4py` from source with the active MPI wrapper,
+- overrides Python's default linker wrapper so MPI extension linking matches the MPI compiler toolchain, and
+- writes `mpi4py/mpi.cfg` so pyranda can recover the matching `mpif90`/`mpifort` compiler during its own build.
+
+For a full fresh-environment bootstrap on this host, use [scripts/bootstrap_toss_4_x86_64_ib.sh](/usr/WS2/olson45/SAND/pyranda-codex/scripts/bootstrap_toss_4_x86_64_ib.sh). It creates a new virtual environment and then runs the full `mpi4py` + `pyranda` install flow into it.
+
+If your host cannot reach the configured Python package index but already has compatible `numpy`/`scipy`/`matplotlib` installed system-wide, you can create the venv with inherited site packages:
+
+```bash
+BOOTSTRAP_VENV_ARGS=--system-site-packages bash scripts/bootstrap_toss_4_x86_64_ib.sh myEnv
+```
+
 ### installing `numpy`
 `numpy` shouldn't have any special build steps, just install as normal:
 
@@ -43,7 +58,7 @@ You can also verify that you're in your venv by checking your `$PATH`:
 ### install pyranda
 
 ```
-pip install . [--user]
+pip install --no-build-isolation . [--user]
 ```
 
 ###

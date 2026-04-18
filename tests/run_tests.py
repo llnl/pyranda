@@ -8,8 +8,19 @@ import time
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
 bin_dir  = os.path.join( test_dir, '../bin')
-root_dir = os.path.join( test_dir, '..')
+root_dir = os.path.abspath(os.path.join( test_dir, '..'))
 pyranda_exe = sys.executable
+pyranda_mpi = os.environ.get('PYRANDA_MPI_LAUNCHER', 'mpirun')
+
+# Make the harness independent of the caller's working directory.
+os.chdir(test_dir)
+
+# Force child tests to import the repo source tree before any installed package.
+pythonpath = os.environ.get('PYTHONPATH')
+if pythonpath:
+    os.environ['PYTHONPATH'] = root_dir + os.pathsep + pythonpath
+else:
+    os.environ['PYTHONPATH'] = root_dir
 
 tests = []    # List of test objects
 dbase = {}    # Dictionary of baselines
@@ -24,7 +35,12 @@ except:
     
 # Since Python 3 doesn't have execfile
 def execfile(file_name):
-    exec(compile(open(file_name, "rb").read(), file_name, 'exec'))
+    file_path = file_name
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(test_dir, file_name)
+    with open(file_path, "rb") as handle:
+        code = compile(handle.read(), file_path, 'exec')
+    exec(code, globals(), globals())
     
 # Add tests here
 execfile('cases/testUnit.py')

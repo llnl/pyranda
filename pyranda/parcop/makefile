@@ -61,9 +61,11 @@ python.abiflag = $(shell $(python) -c "import sys; print(getattr(sys,'abiflags',
 #python.Lflags  = -L$(python.libdir) -Wl,-R$(python.libdir)
 python.Lflags  = -L$(python.libdir) -Wl,-rpath=$(python.libdir)
 python.lflags  = -lpython$(python.version)$(python.abiflag)
+mpi.rpathflags = $(shell $(mpif90) -show 2>/dev/null | tr ' ' '\n' | awk '/^-L/ {sub(/^-L/,""); printf "-Wl,-rpath=%s ", $$0}')
 
 numpy.dir    = $(shell $(python) -c "import numpy; print(numpy.__path__[0])")
-numpy.Iflags = -I$(numpy.dir)/core/include
+numpy.include = $(shell $(python) -c "import numpy; print(numpy.get_include())")
+numpy.Iflags = -I$(numpy.include)
 f2py.dir     = $(numpy.dir)/f2py/src
 f2py.Iflags  = -I$(f2py.dir)
 
@@ -100,7 +102,7 @@ parcopmodule.c parcop-f2pywrappers2.f90: libparcop.a parcop.o
 	@$(f2py) --lower --wrap-functions -m parcop parcop.f90 --verbose
 
 parcop.so: parcopmodule.o fortranobject.o parcop-f2pywrappers2.o
-	$(mpif90) $(lopts) $(python.Lflags) \
+	$(mpif90) $(lopts) $(python.Lflags) $(mpi.rpathflags) \
 		parcopmodule.o fortranobject.o parcop.o parcop-f2pywrappers2.o libparcop.a $(python.lflags) \
 		-o parcop.so
 
@@ -120,6 +122,7 @@ info:
 	@echo "mpicc:     $(mpicc)"
 	@echo "f2py:      $(f2py)"
 	@echo "fflags:    $(fflags)"
+	@echo "mpi.rpath: $(mpi.rpathflags)"
 	@echo "fcompiler: $(fcomp)"
 	@echo "ccompiler: $(ccomp)"
 

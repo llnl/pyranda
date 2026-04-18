@@ -174,8 +174,8 @@ class ipoint:
         xy[:,1]=Y.flatten()
         
         uv=numpy.zeros([1,2])
-        uv[0,0]=pts[0].flatten()
-        uv[0,1]=pts[1].flatten()
+        uv[0,0]=pts[0].item()
+        uv[0,1]=pts[1].item()
         
         vtx, wts = interp_weights(xy, uv)
 
@@ -203,5 +203,4 @@ def interp_weights(xy, uv,d=2):
     delta = uv - temp[:, d]
     bary = numpy.einsum('njk,nk->nj', temp[:, :d, :], delta)
     return vertices, numpy.hstack((bary, 1 - bary.sum(axis=1, keepdims=True)))
-
 

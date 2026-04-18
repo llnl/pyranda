@@ -257,7 +257,7 @@ while time < tstop:
     ss.iprint("%s -- %s --- Umax: %s " % (ss.cycle,time,umax)  ) 
 
     if ( ss.cycle%viz_freq == 0):
-        mixW.append( numpy.trapz( ss.var('mix').mean( axis=[1,2] ) , ss.var('meshx')[:,0,0] )   )
+        mixW.append( numpy.trapezoid( ss.var('mix').mean( axis=[1,2] ) , ss.var('meshx')[:,0,0] )   )
         timeW.append( time )
     
     if not test:

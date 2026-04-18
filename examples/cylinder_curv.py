@@ -262,6 +262,6 @@ if test:
     ny = ss.PyMPI.ny
     v1d =  v[:,int(ny/2)]
     x1d = xx[:,int(ny/2)]
-    fname = testName + '.dat'
+    fname = (testName or problem) + '.dat'
     numpy.savetxt( fname  , (x1d,v1d) )
     print(fname)

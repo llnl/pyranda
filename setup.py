@@ -8,6 +8,7 @@
 ################################################################################
 import os
 import sys
+import shutil
 import subprocess
 from setuptools import setup
 from distutils.command.build import build
@@ -30,11 +31,62 @@ def find_mpi4py_mpif90_compiler():
         return mpi4py_compilers['mpif90']
     elif 'mpifort' in mpi4py_compilers:
         return mpi4py_compilers['mpifort']
-    # last effort, try to build the possible location
-    elif 'mpicc' in mpi4py_compilers and os.path.exists(mpi4py_compilers['mpicc'][:-2] + 'f90'):
-        return mpi4py_compilers['mpicc'][:-2] + 'f90'
-    else:
-        return None
+
+    # mpi4py >= 4 returns an empty config by default unless a packager ships
+    # mpi.cfg, so fall back to the environment and PATH.
+    mpicc = mpi4py_compilers.get('mpicc') or os.environ.get('MPICC') or shutil.which('mpicc')
+    if mpicc:
+        mpicc_dir = os.path.dirname(mpicc)
+        for sibling in ('mpif90', 'mpifort'):
+            candidate = os.path.join(mpicc_dir, sibling)
+            if os.path.exists(candidate):
+                return candidate
+
+    for envvar in ('MPIF90', 'MPIFORT'):
+        candidate = os.environ.get(envvar)
+        if candidate:
+            return candidate
+
+    return shutil.which('mpif90') or shutil.which('mpifort')
+
+
+def find_mpi4py_mpicc_compiler():
+    mpi4py_compilers = mpi4py.get_config()
+    return mpi4py_compilers.get('mpicc') or os.environ.get('MPICC') or shutil.which('mpicc')
+
+
+def verify_mpi_compiler_compatibility(mpif90):
+    mpi4py_compilers = mpi4py.get_config()
+    configured_mpif90 = mpi4py_compilers.get('mpif90') or mpi4py_compilers.get('mpifort')
+    configured_mpicc = find_mpi4py_mpicc_compiler()
+    resolved_mpif90 = os.path.realpath(mpif90) if mpif90 else None
+
+    if not resolved_mpif90:
+        raise RuntimeError("unable to determine an mpif90/mpifort compiler for pyranda")
+
+    if configured_mpif90:
+        if resolved_mpif90 != os.path.realpath(configured_mpif90):
+            raise RuntimeError(
+                "mpi4py was built with {!r} but pyranda will build with {!r}".format(
+                    configured_mpif90, mpif90
+                )
+            )
+        return
+
+    if configured_mpicc:
+        mpicc_dir = os.path.dirname(os.path.realpath(configured_mpicc))
+        for sibling in ('mpif90', 'mpifort'):
+            candidate = os.path.join(mpicc_dir, sibling)
+            if os.path.exists(candidate):
+                if resolved_mpif90 != os.path.realpath(candidate):
+                    raise RuntimeError(
+                        "mpi4py was built with {!r}, but pyranda will build with {!r}".format(
+                            configured_mpicc, mpif90
+                        )
+                    )
+                return
+
+    print("mpi4py did not advertise compiler metadata; using {!r} without additional verification".format(mpif90))
 
 
 distname = "pyranda"
@@ -93,18 +145,21 @@ class PyrandaMakeMixin():
         mpi4py_mpif90 = find_mpi4py_mpif90_compiler()
         python = sys.executable
         args = ['make', '-C', fortran_package, 'python={}'.format(python)]
+        selected_mpif90 = None
 
         if self.mpif90 is not None:
             args.append('mpif90={}'.format(self.mpif90))
+            selected_mpif90 = self.mpif90
         elif mpi4py_mpif90 is not None:
             args.append('mpif90={}'.format(mpi4py_mpif90))
+            selected_mpif90 = mpi4py_mpif90
 
         # test mpi X mpi4py compatibility
         if self.check_mpi_compatibility:
             print("trying to verify that the mpi compiler is compatible with mpi4py")
             try:
-                subprocess.check_call(args + ['test-mpi4py'])
-            except subprocess.CalledProcessError:
+                verify_mpi_compiler_compatibility(selected_mpif90)
+            except RuntimeError:
                 print("mpi verification failed")
                 raise
             print("mpi verification successful")
