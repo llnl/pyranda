@@ -59,6 +59,10 @@ find_build_support_site_packages() {
   return 1
 }
 
+has_importable_mpi4py() {
+  "$python_bin" -c 'import mpi4py; print(mpi4py.__version__)' >/dev/null 2>&1
+}
+
 prepare_source_tree() {
   local build_root
   build_root="$(mktemp -d "${TMPDIR:-/tmp}/mpi4py-build.XXXXXX")"
@@ -133,30 +137,35 @@ if [[ "$cython_site_packages" != "$build_support_site_packages" ]]; then
 fi
 build_pythonpath="$build_pythonpath${PYTHONPATH:+:$PYTHONPATH}"
 
-srcdir="$(prepare_source_tree)"
+if has_importable_mpi4py; then
+  echo "reusing importable mpi4py from the selected python environment"
+  "$python_bin" -c 'import mpi4py; from mpi4py import MPI; print("mpi4py", mpi4py.__version__); print(MPI.Get_library_version().splitlines()[0])'
+else
+  srcdir="$(prepare_source_tree)"
 
-echo "building mpi4py $version with:"
-echo "  python: $python_bin"
-echo "  mpicc:  $mpicc"
-echo "  mpif90: $mpif90"
-echo "  source: $srcdir"
+  echo "building mpi4py $version with:"
+  echo "  python: $python_bin"
+  echo "  mpicc:  $mpicc"
+  echo "  mpif90: $mpif90"
+  echo "  source: $srcdir"
 
-env \
-  PYTHONPATH="$build_pythonpath" \
-  MPICC="$mpicc" \
-  MPILD="$mpicc" \
-  CC="$mpicc" \
-  LDSHARED="$mpicc -shared" \
-  "$python_bin" -m pip install \
-    --no-build-isolation \
-    --no-cache-dir \
-    --force-reinstall \
-    "$srcdir"
+  env \
+    PYTHONPATH="$build_pythonpath" \
+    MPICC="$mpicc" \
+    MPILD="$mpicc" \
+    CC="$mpicc" \
+    LDSHARED="$mpicc -shared" \
+    "$python_bin" -m pip install \
+      --no-build-isolation \
+      --no-cache-dir \
+      --force-reinstall \
+      "$srcdir"
 
-write_mpi4py_config
+  write_mpi4py_config
+  "$python_bin" -c 'import mpi4py; from mpi4py import MPI; cfg = mpi4py.get_config(); print("mpi4py", mpi4py.__version__); print("mpi.cfg", cfg); print(MPI.Get_library_version().splitlines()[0])'
+fi
+
 write_site_precedence_override
-
-"$python_bin" -c 'import mpi4py; from mpi4py import MPI; cfg = mpi4py.get_config(); print("mpi4py", mpi4py.__version__); print("mpi.cfg", cfg); print(MPI.Get_library_version().splitlines()[0])'
 
 "$python_bin" -m pip install -r requirements.txt
 make -C pyranda/parcop clean

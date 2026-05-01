@@ -190,22 +190,31 @@ class leosFunc():
         if type(T) == type(0.0):
             T = numpy.array( [T] )        
         
-        x = leospy.VectorOfDoubles( rho )
-        y = leospy.VectorOfDoubles( T   )
-        if (type(Var) == type( numpy.array([]))) :
-            f = leospy.VectorOfDoubles( Var   )
+        if hasattr(self.eosFunc, "eval_iDDDDDo"):
+            x = leospy.VectorOfDoubles( rho )
+            y = leospy.VectorOfDoubles( T   )
+            if (type(Var) == type( numpy.array([]))) :
+                f = leospy.VectorOfDoubles( Var   )
+            else:
+                f = leospy.VectorOfDoubles( rho*0.0   )
+            dx = leospy.VectorOfDoubles( rho*0.0 )
+            dy = leospy.VectorOfDoubles( rho*0.0 )
+            
+            self.eosFunc.eval_iDDDDDo( N, x, y, f, dx, dy, self.lopts )
+            f = numpy.array( f )
+            dx = numpy.array(dx)
+            dy = numpy.array(dy)
         else:
-            f = leospy.VectorOfDoubles( rho*0.0   )
-        dx = leospy.VectorOfDoubles( rho*0.0 )
-        dy = leospy.VectorOfDoubles( rho*0.0 )
-        
-        self.eosFunc.eval_iDDDDDo( N, x, y, f, dx, dy, self.lopts )
+            f, dx, dy = self.eosFunc.eval(int(N), rho.tolist(), T.tolist(), self.lopts)
+            f = numpy.array(f)
+            dx = numpy.array(dx)
+            dy = numpy.array(dy)
 
         if not dxdy:
-            return numpy.array( f )
+            return f
 
         else:
-            return [ numpy.array(f), numpy.array(dx), numpy.array(dy) ]
+            return [ f, dx, dy ]
 
     
 
@@ -221,18 +230,21 @@ class leosFunc():
         if type(E) == type(0.0):
             E = numpy.array( [E] )
 
-        x = leospy.VectorOfDoubles( rho )
-        E = leospy.VectorOfDoubles( E   )
-        if (type(Tg) == type( numpy.array([]))) :
-            T = leospy.VectorOfDoubles( Tg   )
-        else:
-            T = leospy.VectorOfDoubles( rho*0.0   )
-        dx = leospy.VectorOfDoubles( rho*0.0 )
-        dy = leospy.VectorOfDoubles( rho*0.0 )
-        
-        self.eosFunc.inverseEval_iDDDDDo( N, x, E, T, dx, dy, self.lopts )
+        if hasattr(self.eosFunc, "inverseEval_iDDDDDo"):
+            x = leospy.VectorOfDoubles( rho )
+            E = leospy.VectorOfDoubles( E   )
+            if (type(Tg) == type( numpy.array([]))) :
+                T = leospy.VectorOfDoubles( Tg   )
+            else:
+                T = leospy.VectorOfDoubles( rho*0.0   )
+            dx = leospy.VectorOfDoubles( rho*0.0 )
+            dy = leospy.VectorOfDoubles( rho*0.0 )
+            
+            self.eosFunc.inverseEval_iDDDDDo( N, x, E, T, dx, dy, self.lopts )
+            return numpy.array( T )
 
-        return numpy.array( T )       
+        T, dx, dy = self.eosFunc.inverseEval(int(N), rho.tolist(), E.tolist(), self.lopts)
+        return numpy.array(T)       
         
 
         
