@@ -9,12 +9,58 @@ name="mpi4py-$version"
 tarball="${name}.tar.gz"
 env_dir="${1:-myEnv}"
 python_bin="${PYTHON_BIN:-$env_dir/bin/python}"
+mpi4py_mode="${PYRANDA_MPI4PY_MODE:-build}"
 
 test -x "$python_bin" || {
   echo "python interpreter not found: $python_bin"
   echo "usage: $0 [path-to-venv]"
   exit 1
 }
+
+case "$mpi4py_mode" in
+  build|reuse)
+    ;;
+  *)
+    echo "invalid PYRANDA_MPI4PY_MODE: $mpi4py_mode"
+    echo "expected one of: build, reuse"
+    exit 1
+    ;;
+esac
+
+prepend_cray_runtime_path() {
+  [[ -n "${CRAY_LD_LIBRARY_PATH:-}" ]] || return 0
+
+  case ":${LD_LIBRARY_PATH:-}:" in
+    *":${CRAY_LD_LIBRARY_PATH}:"*)
+      ;;
+    *)
+      export LD_LIBRARY_PATH="${CRAY_LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+      ;;
+  esac
+}
+
+install_activate_hook() {
+  local activate_file="$env_dir/bin/activate"
+  [[ -f "$activate_file" ]] || return 0
+  grep -q "PYRANDA_CRAY_RUNTIME_HOOK" "$activate_file" && return 0
+
+  cat >> "$activate_file" <<'EOF'
+
+# PYRANDA_CRAY_RUNTIME_HOOK
+if [ -n "${CRAY_LD_LIBRARY_PATH:-}" ]; then
+    case ":${LD_LIBRARY_PATH:-}:" in
+        *":${CRAY_LD_LIBRARY_PATH}:"*)
+            ;;
+        *)
+            export LD_LIBRARY_PATH="${CRAY_LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+            ;;
+    esac
+fi
+EOF
+}
+
+prepend_cray_runtime_path
+install_activate_hook
 
 resolve_compiler() {
   local requested="${1:-}"
@@ -61,6 +107,32 @@ find_build_support_site_packages() {
 
 has_importable_mpi4py() {
   "$python_bin" -c 'import mpi4py; print(mpi4py.__version__)' >/dev/null 2>&1
+}
+
+describe_mpi4py_source() {
+  if [[ -f "$tarball" ]]; then
+    echo "build from local tarball $tarball"
+    return 0
+  fi
+
+  if [[ -d "$name" ]]; then
+    echo "build from local source tree $name"
+    return 0
+  fi
+
+  echo "download $tarball from GitHub and build from source"
+}
+
+show_mpi4py_details() {
+  "$python_bin" - <<'EOF'
+import mpi4py
+from mpi4py import MPI
+
+print("mpi4py", mpi4py.__version__)
+print("mpi4py module", mpi4py.__file__)
+print("mpi4py config", mpi4py.get_config())
+print(MPI.Get_library_version().splitlines()[0])
+EOF
 }
 
 prepare_source_tree() {
@@ -138,9 +210,24 @@ fi
 build_pythonpath="$build_pythonpath${PYTHONPATH:+:$PYTHONPATH}"
 
 if has_importable_mpi4py; then
-  echo "reusing importable mpi4py from the selected python environment"
-  "$python_bin" -c 'import mpi4py; from mpi4py import MPI; print("mpi4py", mpi4py.__version__); print(MPI.Get_library_version().splitlines()[0])'
+  importable_mpi4py=yes
 else
+  importable_mpi4py=no
+fi
+
+if [[ "$mpi4py_mode" == "reuse" && "$importable_mpi4py" == "yes" ]]; then
+  echo "selected mpi4py action: reuse importable mpi4py from the selected python environment"
+else
+  action_description="$(describe_mpi4py_source)"
+  if [[ "$mpi4py_mode" == "reuse" ]]; then
+    echo "selected mpi4py action: requested reuse, but no importable mpi4py was found; $action_description"
+  elif [[ "$importable_mpi4py" == "yes" ]]; then
+    echo "selected mpi4py action: $action_description"
+    echo "  ignoring importable mpi4py because PYRANDA_MPI4PY_MODE defaults to build"
+    echo "  set PYRANDA_MPI4PY_MODE=reuse to reuse an existing mpi4py"
+  else
+    echo "selected mpi4py action: $action_description"
+  fi
   srcdir="$(prepare_source_tree)"
 
   echo "building mpi4py $version with:"
@@ -162,11 +249,13 @@ else
       "$srcdir"
 
   write_mpi4py_config
-  "$python_bin" -c 'import mpi4py; from mpi4py import MPI; cfg = mpi4py.get_config(); print("mpi4py", mpi4py.__version__); print("mpi.cfg", cfg); print(MPI.Get_library_version().splitlines()[0])'
 fi
+
+echo "mpi4py available in $env_dir:"
+show_mpi4py_details
 
 write_site_precedence_override
 
 "$python_bin" -m pip install -r requirements.txt
-make -C pyranda/parcop clean
+make -C pyranda/parcop clean python="$python_bin"
 env PYTHONPATH="$build_pythonpath" "$python_bin" -m pip install --no-build-isolation .

@@ -1,7 +1,22 @@
+import os
+import shutil
 import sys
+import tempfile
 import time
-import numpy 
+
+import numpy
+
+if "MPLCONFIGDIR" not in os.environ:
+    mplconfigdir = os.path.join(tempfile.gettempdir(), "mpl-pyranda")
+    os.makedirs(mplconfigdir, exist_ok=True)
+    os.environ["MPLCONFIGDIR"] = mplconfigdir
+
+if not any(os.environ.get(name) for name in ("DISPLAY", "WAYLAND_DISPLAY")):
+    os.environ.setdefault("MPLBACKEND", "Agg")
+
 import matplotlib.pyplot as plt
+
+headless = "agg" in plt.get_backend().lower()
 
 from pyranda import pyrandaSim
 
@@ -59,7 +74,7 @@ tt = L/v * 1.0
 dt = dt_max
 cnt = 1
 time = 0.0
-viz = True
+viz = not headless
 while tt > time:
 
 
@@ -90,7 +105,7 @@ ss.iprint( error )
 
 
 
-if test == 0:
+if test == 0 and not headless:
     # Latex/PDF generation
     ss.setupLatex()
     ss.latex.tMap[":phi:"] = r'\phi'
@@ -128,5 +143,11 @@ if test == 0:
     results.addFigure("Error",size=.45)
     
     
+    texcache = os.path.join(tempfile.gettempdir(), "texlive-pyranda")
+    os.makedirs(texcache, exist_ok=True)
+    os.environ.setdefault("TEXMFVAR", texcache)
+    os.environ.setdefault("TEXMFCONFIG", texcache)
+
     ss.latex.makeDoc()
-    ss.latex.showPDF()
+    if any(shutil.which(cmd) for cmd in ("xpdf", "open")) and not headless:
+        ss.latex.showPDF()

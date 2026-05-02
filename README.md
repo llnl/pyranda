@@ -14,11 +14,38 @@ Pyranda parses (through a simple interpreter) the full definition of a system of
 
 
 ## Prerequisites
-At a minimum, your system will need the following installed to run pyranda. (see install notes for detailed instructions) 
+At a minimum, your system will need the following installed to run pyranda. See [INSTALL.md](/usr/WS2/olson45/SAND/pyranda-codex/INSTALL.md) for the detailed flows.
+
 - A fortran compiler with MPI support
-- python 2.7, including these packages
-  - numpy
-  - mpi4py
+- Python 3
+- `numpy`
+- `scipy`
+- `matplotlib`
+- `mpi4py`
+
+## Install
+On `toss_4_x86_64`, use the host-specific bootstrap scripts in [scripts/](/usr/WS2/olson45/SAND/pyranda-codex/scripts). On this machine, the following command completed successfully:
+
+```bash
+BOOTSTRAP_VENV_ARGS=--system-site-packages bash scripts/bootstrap_toss_4_x86_64_ib.sh myEnv
+source myEnv/bin/activate
+```
+
+The plain bootstrap without `--system-site-packages` built `mpi4py` successfully but then failed when the configured package index was unreachable for `matplotlib`.
+The bootstrap rebuilds `mpi4py` from source by default; set `PYRANDA_MPI4PY_MODE=reuse` if you explicitly want to reuse an existing importable `mpi4py`.
+
+For non-`toss_4_x86_64` environments, install the dependencies from `requirements.txt` first and then install pyranda without build isolation:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pip install --no-build-isolation .
+```
+
+A quick headless smoke test after installation is:
+
+```bash
+MPLBACKEND=Agg MPLCONFIGDIR=${MPLCONFIGDIR:-/tmp/mpl-pyranda} python examples/advection.py 32 1
+```
 
 ## Tutorials
 A few tutorials are included on the [project wiki page](https://github.com/LLNL/pyranda/wiki) that cover the example below, as well as few others.  A great place to start if you want to discover what types of problems you can solve.
@@ -70,4 +97,3 @@ Please us the folowing bibtex, when you refer to this project.
     year   = {2023}
   }
 ```
-

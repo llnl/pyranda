@@ -6,7 +6,9 @@ test -e INSTALL.md || { echo "this must run from the root of pyranda"; exit 1; }
 
 env_dir="${1:-myEnv}"
 python_bin="${PYTHON_FOR_VENV:-$(command -v python3 || true)}"
-venv_args_string="${BOOTSTRAP_VENV_ARGS:-}"
+# The toss_4_x86_64 Python stack already carries numpy/scipy/matplotlib.
+# Default to inheriting it so bootstrap does not depend on external index access.
+venv_args_string="${BOOTSTRAP_VENV_ARGS:---system-site-packages}"
 venv_args=()
 
 if [[ -n "$venv_args_string" ]]; then
