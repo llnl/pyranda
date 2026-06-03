@@ -32,7 +32,7 @@ class pyrandaPoisson(pyrandaPackage):
 
         nx = self.nx = pysim.mesh.options["nn"][0]
         ny = self.ny = pysim.mesh.options["nn"][1]
-        nz = self.nz = pysim.mesh.options["nn"][2] # noqa: F841 (used implicitly)
+        nz = self.nz = pysim.mesh.options["nn"][2]  # noqa: F841 (used implicitly)
 
         self.condMesh = None
 
