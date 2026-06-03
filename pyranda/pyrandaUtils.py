@@ -63,7 +63,7 @@ def fortran3d(form, sMap, latex=False):
                 form = form.replace(
                     mvar.replace("#arg#", args), eMap.replace("#arg#", args)
                 )
-            except:
+            except Exception:
                 pass
         else:
             form = form.replace(mvar, sMap[mvar])

@@ -16,7 +16,7 @@ try:
     sys.path.append("/usr/apps/leos/latest_v8/lib/")
     import leospy
 
-except:
+except Exception:
     pass
 
 from .pyrandaPackage import pyrandaPackage

@@ -1,3 +1,4 @@
+# ruff: noqa (code fragment, not a standalone file)
 # Copy and paste baselines here
 baselines = """
 euler-2d-64 -- euler-2d-64.dat

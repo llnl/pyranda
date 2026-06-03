@@ -18,7 +18,7 @@ along with Conduction.  If not, see <http://www.gnu.org/licenses/>.
 
 try:
     range = xrange
-except:
+except Exception:
     pass
 
 import numpy as np
@@ -773,7 +773,7 @@ class ConductionND(object):
             val = kwdict[key]
             try:
                 vec.setArray(val)
-            except:
+            except Exception:
                 self.lvec.setArray(val)
                 self.dm.localToGlobal(self.lvec, vec)
 

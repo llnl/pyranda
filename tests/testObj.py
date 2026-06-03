@@ -38,7 +38,7 @@ def relDict(string):
             name = bb.split("--")[0].strip()
             try:
                 relE = float(bb.split("--")[2].strip())
-            except:
+            except Exception:
                 relE = 1.0e-4
             dbase[name] = relE
     return dbase

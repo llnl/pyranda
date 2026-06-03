@@ -9,19 +9,19 @@ from pyranda import pyrandaSim, pyrandaIBM
 # Try to get args
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 128
 
 # import pdb
 # pdb.set_trace()
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 try:
     diffusive = bool(int(sys.argv[3]))
-except:
+except Exception:
     diffusive = False
 
 

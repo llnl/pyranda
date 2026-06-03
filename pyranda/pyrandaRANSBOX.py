@@ -13,7 +13,7 @@ import numpy
 try:
     import ransbox
     from ransbox import *
-except:
+except Exception:
     pass
 from .pyrandaPackage import pyrandaPackage
 

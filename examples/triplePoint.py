@@ -22,7 +22,7 @@ try:
     res = int(sys.argv[1])
     nx *= res
     ny *= res
-except:
+except Exception:
     pass
 
 

@@ -1,3 +1,4 @@
+# ruff: noqa (code fragment, not a standalone file)
 # Copy and paste baselines here
 baselines = """
 heat1D-analytic-16 -- 0.0

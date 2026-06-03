@@ -11,12 +11,12 @@ from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 64
 
 try:
     is2D = bool(int(sys.argv[2]))
-except:
+except Exception:
     is2D = True
 
 

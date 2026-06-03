@@ -8,22 +8,22 @@ from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaPoisson
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 40
 
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 try:
     testName = sys.argv[3]
-except:
+except Exception:
     testName = None
 
 try:
     solver = sys.argv[4]
-except:
+except Exception:
     solver = "scipy"
 
 

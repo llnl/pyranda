@@ -50,7 +50,7 @@ class pyrandaPoisson(pyrandaPackage):
             try:
                 import sys, petsc4py
                 from petsc4py import PETSc
-            except:
+            except Exception:
                 pysim.iprint("Error importing petsc4py:")
                 pysim.iprint(" Defaulting to scipy solver.")
                 self.solver_type = "scipy"

@@ -13,17 +13,17 @@ from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM, pyrandaP
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 64
 
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 try:
     testName = sys.argv[3]
-except:
+except Exception:
     testName = None
 
 

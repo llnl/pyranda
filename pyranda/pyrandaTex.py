@@ -201,11 +201,11 @@ class pyrandaTex:
             try:
                 err = runCMD(["xpdf", self.pdfFile])
                 return
-            except:
+            except Exception:
                 print("Error: 'xpdf' not found")
 
             try:
                 err = runCMD(["open", self.pdfFile])
                 return
-            except:
+            except Exception:
                 print("Error: 'open' not found")

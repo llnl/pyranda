@@ -1,3 +1,4 @@
+# ruff: noqa (code fragment, not a standalone file)
 # Copy and paste baselines here
 baselines = """
 cylinder-2d-32 -- cylinder-2d-32.dat

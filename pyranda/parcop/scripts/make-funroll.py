@@ -15,7 +15,7 @@ fsuff = ".f90"
 
 try:
     option = int(sys.argv[1])
-except:
+except Exception:
     print("Error: specify 1- forward transform, or 2-backward")
     exit()
 
@@ -31,7 +31,7 @@ if option == 1:
     for ff in Files:
         try:
             os.system("python %s/funroller.py %s %s %s" % (pwd, ff, fsuff, 0))
-        except:
+        except Exception:
             print("Error processing file:%s" % ff)
 
 

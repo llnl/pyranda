@@ -1,3 +1,4 @@
+# ruff: noqa (code fragment, not a standalone file)
 # Copy and paste baselines here
 baselines = """
 integration-25 -- 2.19857470896e-07

@@ -1,3 +1,4 @@
+# ruff: noqa (code fragment, not a standalone file)
 # Copy and paste baselines here
 baselines = """
 taylorgreen -- 1.00106718415

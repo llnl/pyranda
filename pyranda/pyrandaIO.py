@@ -28,7 +28,7 @@ class pyrandaIO:
         if self.PyMPI.master == 1:
             try:
                 os.mkdir(rootname)
-            except:
+            except Exception:
                 pass
         self.PyMPI.comm.barrier()  # Wait for directory to be made
 
@@ -38,7 +38,7 @@ class pyrandaIO:
         if self.PyMPI.master == 1:
             try:
                 os.mkdir(os.path.join(self.rootname, dumpFile))
-            except:
+            except Exception:
                 pass
 
         rank = self.PyMPI.comm.rank

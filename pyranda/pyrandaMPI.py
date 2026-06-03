@@ -56,7 +56,7 @@ class pyrandaMPI:
         # Get the mesh function if it exists
         try:
             self.meshFunction = meshOptions["meshFunction"]
-        except:
+        except Exception:
             self.meshFunction = None
 
         # If explicit comm it given, use that communicator

@@ -23,12 +23,12 @@ from pyranda import pyrandaSim
 # Try to get args
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 100
 
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 ## Define a mesh

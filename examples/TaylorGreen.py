@@ -12,12 +12,12 @@ from pyranda import pyrandaSim, pyrandaTimestep
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 32
 
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 problem = "TGvortex"

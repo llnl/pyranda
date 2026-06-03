@@ -1,9 +1,17 @@
 # Run a bunch of test and check answers
 from __future__ import print_function
-import os, sys
-import numpy as npy
-import subprocess
-from testObj import *
+import os
+import sys
+from testObj import (
+    sexe,
+    checkProfile,
+    checkScalar,
+    plotError,
+    plt,
+    baseDict,  # noqa: F401 (used within execfile)
+    relDict,  # noqa: F401 (used within execfile)
+    testObj,  # noqa: F401 (used within execfile)
+)
 import time
 
 test_dir = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +38,7 @@ verbose = False
 try:
     verbose = sys.argv[1]
     print("Running in verbose mode")
-except:
+except Exception:
     pass
 
 
@@ -96,7 +104,7 @@ for test in tests:
         baseline = dbase[test.name]  # Baseline value/file
         try:
             rdiff = relE[test.name]  # Rel. error for this baseline
-        except:
+        except Exception:
             rdiff = 1.0e-4
 
         if curve:
@@ -126,7 +134,7 @@ for test in tests:
             if curve:
                 plotError(baseline, pout)
 
-    except:
+    except Exception:
         testPass = False
         print("Fail: (No baseline data found )")
         fout = "%s -- %s" % (test.name, pout)

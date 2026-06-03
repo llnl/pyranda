@@ -9,12 +9,12 @@ from pyranda import pyrandaSim
 # Try to get args
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 10
 
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 

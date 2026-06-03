@@ -27,21 +27,21 @@ dt_max = 1.0  # e-3
 
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     pass
 
 try:
     Vmean = float(sys.argv[2]) * 1.0 / tFinal
-except:
+except Exception:
     pass
 
 try:
     problem += sys.argv[3]
-except:
+except Exception:
     pass
 try:
     test = bool(int(sys.argv[4]))
-except:
+except Exception:
     pass
 
 

@@ -11,17 +11,17 @@ from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 64
 
 try:
     is2D = bool(int(sys.argv[2]))
-except:
+except Exception:
     is2D = False
 
 try:
     test = bool(int(sys.argv[3]))
-except:
+except Exception:
     test = False
 
 
@@ -253,8 +253,8 @@ tstop = 100.0
 dtmax = dt * 0.1
 
 outVars = ["p", "u", "v", "w", "rho", "Yh"]
-ss.write(outVars)
-
+if not test:
+    ss.write(outVars)
 
 mixW = []
 timeW = []

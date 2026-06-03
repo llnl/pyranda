@@ -11,7 +11,7 @@ from pyranda import pyrandaSim, pyrandaIBM, pyrandaBC, pyrandaTimestep
 # Try to get args
 try:
     test = bool(int(sys.argv[1]))
-except:
+except Exception:
     test = False
 
 

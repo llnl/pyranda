@@ -4,19 +4,19 @@ import re
 
 try:
     file_name = sys.argv[1]
-except:
+except Exception:
     print("Error: Please specify filename")
     exit()
 
 try:
     fsuff = sys.argv[2]
-except:
+except Exception:
     fsuff = ".f"
     print("Using %s as fortran file suffix" % fsuff)
 
 try:
     profile = bool(int(sys.argv[3]))
-except:
+except Exception:
     profile = True
     print("Adding profiling tags")
 
@@ -170,7 +170,7 @@ class iLoop:
             comment = ""  # unroll.split('!$')[0]
             indent = ""
 
-        except:
+        except Exception:
             print("Error in loop (l.%s) : %s" % (self.start + 1, unroll))
             import pdb
 

@@ -294,7 +294,7 @@ class pyrandaSim:
                 if numpy.isnan(myvar.data).any():
                     nans = True
                     svars += ivar + " "
-            except:
+            except Exception:
                 self.iprint("%s is not a variable" % ivar)
 
         return svars
@@ -433,7 +433,7 @@ class pyrandaSim:
         if self.PyMPI.master == 1:
             try:
                 os.mkdir(os.path.join(self.PyIO.rootname, dumpFile))
-            except:
+            except Exception:
                 pass
 
         self.PyMPI.comm.barrier()  # Wait for directory to be made
@@ -488,7 +488,7 @@ class pyrandaSim:
         if self.PyMPI.master == 1:
             try:
                 os.mkdir(dumpDir)
-            except:
+            except Exception:
                 pass
 
         self.PyMPI.comm.Barrier()

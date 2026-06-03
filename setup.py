@@ -153,7 +153,7 @@ class PyrandaMakeMixin:
         try:
             os.chdir("tests")
             subprocess.check_call(["python", "run_tests.py"])
-        except:
+        except Exception:
             print("Failed to run tests")
             raise
 

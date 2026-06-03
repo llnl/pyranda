@@ -16,7 +16,7 @@ from .pyranda import pyrandaSim
 # Gaurd against hdf5 dependency
 try:
     import h5py
-except:
+except Exception:
     print("h5py is required for mirandaReader to work")
     pass
 
@@ -86,21 +86,21 @@ class mirandaReader:
         try:
             dx = f[header + path_grid + "dx/value"][0]
             self.ax = ax = int(f[header + path_coord + "i/value"][0]) - 1
-        except:
+        except Exception:
             dx = 1.0
             ax = 1
 
         try:
             dy = f[header + path_grid + "dy/value"][0]
             self.ay = ay = int(f[header + path_coord + "j/value"][0]) - 1
-        except:
+        except Exception:
             dy = 1.0
             ay = 1
 
         try:
             dz = f[header + path_grid + "dz/value"][0]
             self.az = az = int(f[header + path_coord + "k/value"][0]) - 1
-        except:
+        except Exception:
             dz = 1.0
             az = 1
 
@@ -346,15 +346,15 @@ def import_field(data, proc_num, var):
     header = "datagroup"  # + str(proc_num).zfill(7)
     try:
         nx = int(data[header + path_coord + "i/value"][0]) - 1
-    except:
+    except Exception:
         nx = 1
     try:
         ny = int(data[header + path_coord + "j/value"][0]) - 1
-    except:
+    except Exception:
         ny = 1
     try:
         nz = int(data[header + path_coord + "k/value"][0]) - 1
-    except:
+    except Exception:
         nz = 1
 
     n = (nx, ny, nz)
