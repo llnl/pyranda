@@ -68,7 +68,7 @@ Install the Python dependencies first so `numpy` and `mpi4py` are already import
 `setup.py` runs:
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -r scripts/requirements.txt
 ```
 
 Then install pyranda itself:
