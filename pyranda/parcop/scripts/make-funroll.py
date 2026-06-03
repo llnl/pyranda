@@ -1,6 +1,6 @@
 #!/bin/local/bin/python
-import os, sys
-import shutil
+import os
+import sys
 import glob
 
 

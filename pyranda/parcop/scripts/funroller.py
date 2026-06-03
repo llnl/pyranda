@@ -1,6 +1,5 @@
-import copy
-import sys, os
-import re
+import sys
+import os
 
 try:
     file_name = sys.argv[1]
@@ -141,9 +140,7 @@ class iLoop:
         new_code = []
 
         # Get unroll args
-        dim = self.dim
         var = self.var
-        sumvar = self.sumvar
         fix = self.fix
         bounds = self.bounds
         replace = self.replace
@@ -226,7 +223,7 @@ class iLoop:
 
         skipdo = False
         # Check for var = [] cases... omp only
-        if not var in parms:
+        if var not in parms:
             skipdo = True
             parms.update({"var": []})
 
@@ -259,7 +256,7 @@ class iLoop:
                 indent += "  "
 
         # Form variable "index" which is thing appended to the variable "var(i,j,k)" -> index = '(i,j,k)'
-        if not fix in parms:
+        if fix not in parms:
             my_indices.reverse()
             index = "(%s" % my_indices[0]
             for dd in range(1, parms[self.dim]):
@@ -363,7 +360,7 @@ class iLoop:
 
                 icode = []
                 for myvar in mycode:
-                    if not fix in parms:
+                    if fix not in parms:
                         # Check for 1:1 match
                         tvar = myvar.strip()
 
