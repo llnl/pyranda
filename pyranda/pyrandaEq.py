@@ -8,8 +8,8 @@
 #
 # Written by: Britton J. Olson, olson45@llnl.gov
 ################################################################################
-from .pyrandaUtils import *
-import numpy
+from .pyrandaUtils import fortran3d, findVar
+import numpy  # noqa: F401 (used implicity)
 
 
 class pyrandaEq:

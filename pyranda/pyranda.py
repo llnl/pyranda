@@ -11,13 +11,11 @@
 from __future__ import print_function
 from mpi4py import MPI
 import numpy
-from numpy import nan
-import re
-import sys, os
-import time, random
+import sys
+import os
+import time
+import random
 import glob
-import inspect
-import scipy
 
 from .pyrandaMPI import pyrandaMPI
 from .pyrandaVar import pyrandaVar
@@ -25,9 +23,8 @@ from .pyrandaEq import pyrandaEq
 from .pyrandaMesh import pyrandaMesh, defaultMeshOptions
 from .pyrandaIO import pyrandaIO
 from .pyrandaPlot import pyrandaPlot
-from .pyrandaUtils import *
+from .pyrandaUtils import fortran3d, code, version, icopyright, findVar
 from .pyrandaTex import pyrandaTex
-from .pyrandaElliptical import pyrandaPoisson
 
 
 class pyrandaSim:
@@ -38,7 +35,7 @@ class pyrandaSim:
         self.mesh = pyrandaMesh()
 
         # Parse shorthand mesh description if string
-        if type(meshOptions) == type(""):
+        if type(meshOptions) is type(""):
             self.mesh.makeMeshStr(meshOptions)
             meshOptions = self.mesh.options
 
@@ -61,7 +58,6 @@ class pyrandaSim:
         dx = (meshOptions["xn"][0] - meshOptions["x1"][0]) / max(nx - 1, 1)
         dy = (meshOptions["xn"][1] - meshOptions["x1"][1]) / max(ny - 1, 1)
         dz = (meshOptions["xn"][2] - meshOptions["x1"][2]) / max(nz - 1, 1)
-        periodic = meshOptions["periodic"]
 
         self.dx = dx
         self.dy = dy
@@ -136,8 +132,8 @@ class pyrandaSim:
                 sys.stdout.flush()
             else:
                 typing_speed = wpm
-                for l in sprnt:
-                    sys.stdout.write(l)
+                for char in sprnt:
+                    sys.stdout.write(char)
                     sys.stdout.flush()
                     time.sleep(random.random() * 10.0 / typing_speed)
                 print("")
@@ -284,7 +280,6 @@ class pyrandaSim:
 
     def checkForNan(self, names=[]):
 
-        nans = False
         svars = ""
         if not names:
             names = self.variables
@@ -292,7 +287,6 @@ class pyrandaSim:
             try:
                 myvar = self.variables[ivar]
                 if numpy.isnan(myvar.data).any():
-                    nans = True
                     svars += ivar + " "
             except Exception:
                 self.iprint("%s is not a variable" % ivar)
@@ -376,10 +370,8 @@ class pyrandaSim:
         flux = {}  # numpy.asfortranarray( numpy.zeros( shape ) )
         # ieq = 0
         for eqo in self.equations:
-            eq = eqo.eqstr
             if eqo.kind == "PDE":
                 lhs = eqo.LHS[0]
-                Srhs = eq.split("=")[1]  # This is a string to evaluate
                 flux[lhs] = eqo.RHS(self)
 
         return flux
@@ -520,7 +512,7 @@ class pyrandaSim:
                 for typ in supported_types:
                     isType = isType or (typ == itype)
 
-                if itype == type(numpy.ones(1)):
+                if itype is type(numpy.ones(1)):
                     filename = os.path.join(dumpDir, "%s" % vv)
                     serial_data["local_vars"]["numpyArrays"][vv] = filename
                     if self.PyMPI.master:
@@ -632,7 +624,7 @@ class pyrandaSim:
 
     def div(self, f1, f2=None, f3=None):
 
-        if type(f2) == type(None) and type(f3) == type(None):
+        if type(f2) is type(None) and type(f3) is type(None):
             if self.nx > 1:
                 return self.PyMPI.der.div(f1, self.zero, self.zero)
             if self.ny > 1:
@@ -643,7 +635,7 @@ class pyrandaSim:
             if (self.nx <= 1) and (self.ny <= 1) and (self.nx <= 1):
                 return 0.0
 
-        elif type(f3) == type(None):
+        elif type(f3) is type(None):
             if (self.nx > 1) and (self.ny > 1):
                 return self.PyMPI.der.div(f1, f2, self.zero)
             if (self.nz > 1) and (self.ny > 1):
@@ -767,7 +759,6 @@ class pyrandaSim:
         eta[3] = 9766892798963.0 / 10823461281321.0
         eta[4] = 1.0
         # Initialize some intermediate arrays
-        ncons = self.nPDE
         shape = tuple(self.mesh.shape)
 
         tmp1 = {}
@@ -856,10 +847,6 @@ class pyrandaSim:
 
     def euler(self, time, dt):
 
-        # Initialize some intermediate arrays
-        ncons = self.nPDE
-        shape = tuple(self.mesh.shape)
-
         # Get primative flow variables
         time_i = time
         FLUX = self.updateFlux()
@@ -892,7 +879,6 @@ class pyrandaSim:
         eta[3] = 9766892798963.0 / 10823461281321.0
         eta[4] = 1.0
         # Initialize some intermediate arrays
-        ncons = self.nPDE
         shape = tuple(self.mesh.shape)
 
         tmp1 = {}
@@ -955,7 +941,6 @@ class pyrandaSim:
 
 
 def pyrandaRestart(rootname, suffix=None, comm=None):
-    from numpy import array, int32
     import numpy as npy
 
     npy.set_printoptions(threshold=npy.inf)
@@ -972,7 +957,7 @@ def pyrandaRestart(rootname, suffix=None, comm=None):
         dump = os.path.join(rootname, "restart_%s" % suffix)
 
     if not os.path.isdir(dump):
-        self.iprint("Error: Cant read restart file %s" % dump)
+        print("Error: Cant read restart file %s" % dump)
         return None
 
     # Get serial data
@@ -1006,7 +991,7 @@ def pyrandaRestart(rootname, suffix=None, comm=None):
         serial_data["mesh"]["comm"] = comm
 
     if "comm" in serial_data["mesh"]:
-        if type(serial_data["mesh"]["comm"]) != type(MPI.COMM_WORLD):
+        if type(serial_data["mesh"]["comm"]) is not type(MPI.COMM_WORLD):
             print("Error: valid comm is not present")
             exit()
 

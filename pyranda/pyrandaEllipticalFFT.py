@@ -8,8 +8,6 @@
 # Written by: Britton J. Olson, olson45@llnl.gov, modified to use FFTs by Chris Scullard
 ################################################################################
 import numpy
-import scipy.sparse
-from scipy.sparse.linalg import factorized, bicgstab, cg
 from .pyrandaPackage import pyrandaPackage
 
 
@@ -25,10 +23,6 @@ class pyrandaPoissonFFT(pyrandaPackage):
         # self.BCtype = BCtype
         self.pysim = pysim
         pyrandaPackage.__init__(self, PackageName, pysim)
-
-        nx = self.nx = pysim.mesh.options["nn"][0]
-        ny = self.ny = pysim.mesh.options["nn"][1]
-        nz = self.nz = pysim.mesh.options["nn"][2]
 
         # Setup 1/k^2 array
         pi = numpy.pi
@@ -57,7 +51,7 @@ class pyrandaPoissonFFT(pyrandaPackage):
 
     def solve(self, rhs):
 
-        pi = numpy.pi
+        # pi = numpy.pi
         # u = numpy.zeros((self.nx,self.ny,self.nz)) #RHS
         # uc = numpy.zeros((self.nx,self.ny,self.nz)) #RHS
         # u_hat = numpy.zeros((self.nx,self.ny,self.nz)) #RHS

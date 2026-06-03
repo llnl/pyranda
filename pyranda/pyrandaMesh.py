@@ -15,12 +15,11 @@ from .pyrandaVar import pyrandaVar
 
 
 class pyrandaMesh:
-    def __init__(self):  # ,mesh_options):
+    def __init__(self):
 
         self.name = "base"
-        # self.kind = None #mesh_options['type']
-        self.options = {}  # None #mesh_options
-        self.dims = 0  # mesh_options['dim']
+        self.options = {}
+        self.dims = 0
         self.PyMPI = None
         self.x = None
         self.y = None
@@ -32,7 +31,6 @@ class pyrandaMesh:
 
     def makeMeshStr(self, str_mesh):
 
-        mesh_options = {}
         meshStrLines = splitLines(str_mesh)  # Split into lines
 
         self.options = defaultMeshOptions()

@@ -37,25 +37,25 @@ class pyrandaBC(pyrandaPackage):
 
         pFunc = eval("self." + func)
 
-        if type(var) != type([]):
+        if type(var) is not type([]):
             var = [var]
 
-        if type(direction) != type([]):
+        if type(direction) is not type([]):
             direction = [direction]
 
         for d in direction:
             for v in var:
-                if type(val) != type(None):
+                if type(val) is not type(None):
                     pFunc(v, d, val)
                 else:
                     pFunc(v, d)
 
     def extrap(self, var, direction, order=2):
 
-        if type(var) != type([]):
+        if type(var) is not type([]):
             var = [var]
 
-        if type(direction) != type([]):
+        if type(direction) is not type([]):
             direction = [direction]
 
         for d in direction:
@@ -64,7 +64,6 @@ class pyrandaBC(pyrandaPackage):
 
     def extrapolate(self, var, direction, order):
         # Direction switch
-        bcvar = None
         if direction == "x1":
             if self.pyranda.PyMPI.x1proc:
                 if order == 2:
@@ -139,10 +138,10 @@ class pyrandaBC(pyrandaPackage):
 
     def const(self, var, direction, val):
 
-        if type(var) != type([]):
+        if type(var) is not type([]):
             var = [var]
 
-        if type(direction) != type([]):
+        if type(direction) is not type([]):
             direction = [direction]
 
         for d in direction:
@@ -199,10 +198,10 @@ class pyrandaBC(pyrandaPackage):
 
     def slipbc(self, var, direction):
 
-        if type(var) != type([]):
+        if type(var) is not type([]):
             var = [var]
 
-        if type(direction) != type([]):
+        if type(direction) is not type([]):
             direction = [direction]
 
         for d in direction:
@@ -278,12 +277,8 @@ class pyrandaBC(pyrandaPackage):
         Allow tangential velocities
         """
 
-        ax = self.pyranda.PyMPI.ax
-        ay = self.pyranda.PyMPI.ay
-        az = self.pyranda.PyMPI.az
-
         if direction == "y1":
-            if not "slipbc-y1" in self.BCdata.keys():
+            if "slipbc-y1" not in self.BCdata.keys():
                 [n1, n2, n3] = self.getNorms(direction)
                 norms = []
                 norms.append(n1[:, 0, :])
@@ -331,7 +326,7 @@ class pyrandaBC(pyrandaPackage):
                     )
 
         if direction == "yn":
-            if not "slipbc-yn" in self.BCdata.keys():
+            if "slipbc-yn" not in self.BCdata.keys():
                 [n1, n2, n3] = self.getNorms(direction)
                 norms = []
                 norms.append(n1[:, -1, :])
@@ -380,7 +375,7 @@ class pyrandaBC(pyrandaPackage):
                     )
 
         if direction == "x1":
-            if not "slipbc-x1" in self.BCdata.keys():
+            if "slipbc-x1" not in self.BCdata.keys():
                 [n1, n2, n3] = self.getNorms(direction)
                 norms = []
                 norms.append(n1[0, :, :])
@@ -428,7 +423,7 @@ class pyrandaBC(pyrandaPackage):
                     )
 
         if direction == "xn":
-            if not "slipbc-xn" in self.BCdata.keys():
+            if "slipbc-xn" not in self.BCdata.keys():
                 [n1, n2, n3] = self.getNorms(direction)
                 norms = []
                 norms.append(n1[-1, :, :])
@@ -478,10 +473,10 @@ class pyrandaBC(pyrandaPackage):
 
     def exitbc(self, var, direction, norm=False):
 
-        if type(var) != type([]):
+        if type(var) is not type([]):
             var = [var]
 
-        if type(direction) != type([]):
+        if type(direction) is not type([]):
             direction = [direction]
 
         for d in direction:
@@ -628,7 +623,7 @@ class pyrandaBC(pyrandaPackage):
 
     def farfieldbc(self, direction):
 
-        if type(direction) != type([]):
+        if type(direction) is not type([]):
             direction = [direction]
 
         for d in direction:
@@ -833,7 +828,7 @@ class pyrandaBC(pyrandaPackage):
 
     def symm(self, var, direction, anti=False, npts=4):
 
-        if type(var) != type([]):
+        if type(var) is not type([]):
             var = [var]
 
         # For anti-symmetric variables
@@ -841,7 +836,7 @@ class pyrandaBC(pyrandaPackage):
         if anti:
             antiM = -1.0
 
-        if type(direction) != type([]):
+        if type(direction) is not type([]):
             direction = [direction]
 
         for d in direction:
@@ -850,8 +845,6 @@ class pyrandaBC(pyrandaPackage):
 
     def symmetric(self, var, direction, antiMult, npts):
         # Direction switch
-        bcvar = None
-
         varpt = self.pyranda.variables[var].data
 
         if direction == "x1":

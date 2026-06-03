@@ -9,7 +9,8 @@
 # Written by: Britton J. Olson, olson45@llnl.gov
 ################################################################################
 import numpy
-import sys, os, glob
+import os
+import glob
 from os.path import join
 from .pyranda import pyrandaSim
 
@@ -188,7 +189,6 @@ class mirandaReader:
 
     def setNativeVizDict(self, rosetta):
         varDict = {}
-        cnt = 0
         for ii in self.var_list:
             varDict[ii] = miranda_viz_names[rosetta[ii]]
         self.var_index_dict = varDict
@@ -234,7 +234,6 @@ def readChunkMiranda(
     ax = pysim.nx / procs[0]
     ay = pysim.ny / procs[1]
     az = pysim.nz / procs[2]
-    nshape = (ax, ay, az, len(pysim.variables))
 
     for iproc in range(nprocs):
         g1 = procMap["%s-g1" % iproc]

@@ -8,11 +8,8 @@
 #
 # Written by: Britton J. Olson, olson45@llnl.gov
 ################################################################################
-import numpy
-
 try:
     import ransbox
-    from ransbox import *
 except Exception:
     pass
 from .pyrandaPackage import pyrandaPackage
@@ -114,7 +111,7 @@ class pyrandaRANSBOX(pyrandaPackage):
         coord = eval(RBcoordName)
 
         # Make the model
-        self.model = RANSBox_CreateModel(model, coord)
+        self.model = ransbox.RANSBox_CreateModel(model, coord)
 
     def getCoordsList(self):
         """Get available RANSBOX coordinate types"""
@@ -167,7 +164,7 @@ class pyrandaRANSBOX(pyrandaPackage):
     def allocate(self):
 
         # Allocate some space for RANSBox outputs
-        npts = self.nx * self.ny * self.nz
+        npts = self.nx * self.ny * self.nz  # noqa: F841 (used in exec below)
         for ii in self.outputList:
             # exec("val = self.%s" % ii )
             # if val:
@@ -220,7 +217,7 @@ class pyrandaRANSBOX(pyrandaPackage):
 
         # Evaluate model
         npts = self.nx * self.ny * self.nz
-        RANSBox_EvaluateModel(
+        ransbox.RANSBox_EvaluateModel(
             self.model, self.inputs, self.turbvars, self.outputs, npts, "cpu"
         )
 

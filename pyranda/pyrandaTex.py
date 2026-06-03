@@ -8,8 +8,8 @@
 #
 # Written by: Britton J. Olson, olson45@llnl.gov
 ################################################################################
-import sys, os
-from .pyrandaUtils import *
+import os
+from .pyrandaUtils import runCMD, version, icopyright, fortran3d, Timeout
 import random
 import getpass
 
@@ -186,26 +186,25 @@ class pyrandaTex:
         texExe = "pdflatex"
         try:
             with Timeout(10):
-                texOut = runCMD([texExe, texname])
+                _ = runCMD([texExe, texname])
                 os.chdir(cwd)
                 self.pdfFile = texFile.replace(".tex", ".pdf")
 
         except Timeout.Timeout:
             os.chdir(cwd)
             print("PDF render timed out")
-        #
 
     def showPDF(self):
 
         if self.pdfFile:
             try:
-                err = runCMD(["xpdf", self.pdfFile])
+                _ = runCMD(["xpdf", self.pdfFile])
                 return
             except Exception:
                 print("Error: 'xpdf' not found")
 
             try:
-                err = runCMD(["open", self.pdfFile])
+                _ = runCMD(["open", self.pdfFile])
                 return
             except Exception:
                 print("Error: 'open' not found")

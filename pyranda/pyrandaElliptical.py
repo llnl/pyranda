@@ -9,9 +9,8 @@
 ################################################################################
 import numpy
 import scipy.sparse
-from scipy.sparse.linalg import factorized, bicgstab, cg
+from scipy.sparse.linalg import factorized
 from .pyrandaPackage import pyrandaPackage
-import time
 
 
 class pyrandaPoisson(pyrandaPackage):
@@ -33,22 +32,14 @@ class pyrandaPoisson(pyrandaPackage):
 
         nx = self.nx = pysim.mesh.options["nn"][0]
         ny = self.ny = pysim.mesh.options["nn"][1]
-        nz = self.nz = pysim.mesh.options["nn"][2]
-
-        dx = self.dx = pysim.PyMPI.dx
-        dy = self.dy = pysim.PyMPI.dy
-        dz = self.dz = pysim.PyMPI.dz
-
-        ax = self.ax = pysim.PyMPI.ax
-        ay = self.ay = pysim.PyMPI.ay
-        az = self.az = pysim.PyMPI.az
+        nz = self.nz = pysim.mesh.options["nn"][2] # noqa: F841 (used implicitly)
 
         self.condMesh = None
 
         # Check petsc solver availability
         if solver_type == "petsc":
             try:
-                import sys, petsc4py
+                import petsc4py  # noqa: F401 (ignore attempted imports)
                 from petsc4py import PETSc
             except Exception:
                 pysim.iprint("Error importing petsc4py:")
@@ -63,7 +54,6 @@ class pyrandaPoisson(pyrandaPackage):
             dx = (pysim.mesh.options["xn"][0] - pysim.mesh.options["x1"][0]) / nx
             n = self.n = nx * ny
             d = numpy.ones(n)
-            b = numpy.zeros(n)
 
             d0 = d.copy() * -4.0
             d1_lower = d.copy()[0:-1]
@@ -280,7 +270,7 @@ class pyrandaPoisson(pyrandaPackage):
                     # If any BCs are caught, update them here.
                     if hasBC:
                         val = 0
-                        if type(var) == type(""):
+                        if type(var) is type(""):
                             val = self.pysim.var(var).data[:, :, 0][m_ind]
 
                         if isFlux:
@@ -321,9 +311,7 @@ class pyrandaPoisson(pyrandaPackage):
                     mysol[i, j, 0] = sol[j + i * self.ny]
 
         else:
-            pysim.iprint(
-                "Error: No valid elliptical solver given: %s" % self.solver_type
-            )
+            print("Error: No valid elliptical solver given: %s" % self.solver_type)
             exit()
 
         return mysol

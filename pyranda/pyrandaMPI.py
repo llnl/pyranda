@@ -77,7 +77,7 @@ class pyrandaMPI:
             and ((meshOptions["pn"][2] >= 1) or (self.nz == 1))
         )
 
-        if doManualDecompose == True:
+        if doManualDecompose:
             # Decompose based on user-supplied arguments
             px = max(meshOptions["pn"][0], 1)
             py = max(meshOptions["pn"][1], 1)
@@ -280,7 +280,6 @@ class pyrandaMPI:
         return numpy.reshape(fldataT, (n1, n2), order="C")
 
     def subsum3xz(self, data):
-        icom = self.xzcom
         lsum = numpy.sum(data, (0, 2))
         gsum = self.xzcom.allreduce(lsum, op=MPI.SUM)
         Gsum = self.ycom.allgather(gsum)
@@ -299,10 +298,6 @@ class pyrandaMPI:
         return numpy.concatenate(Gsum)
 
     def sum2Dold(self, data, com, n2, n3, index, g2, g3):
-
-        a2 = g2[1] - g2[0]
-        a3 = g3[1] - g3[0]
-        gsum = numpy.zeros((a2, a3))
 
         # Get the local proc mean
         lsum = numpy.sum(data, index)
@@ -373,7 +368,7 @@ class pyrandaMPI:
         meanG = tmpVar.mean(axis=axis, idata=data)
 
         # Loop over local data and make it the mean
-        if axis == None:
+        if axis is None:
             tmpVar.data[:, :, :] = meanG
         else:
             if axis == 0:
@@ -417,7 +412,7 @@ class pyrandaMPI:
             print(sprnt)
             sys.stdout.flush()
 
-    def getIJKpoo(self, data, I, J, K):
+    def getIJKpoo(self, data, I, J, K):  # noqa: E741 (Ambiguous variable names)
         """
         given [imin,imax, jmin,jmax, kmin,kmax] return the global data
         """
@@ -426,9 +421,6 @@ class pyrandaMPI:
         gz = max(1, K[1] - K[0])
         gdata = numpy.zeros((gx, gy, gz))
 
-        nx = data.shape[0]
-        ny = data.shape[1]
-        nz = data.shape[2]
         ax = max(1, self.chunk_3d_hi[0] - self.chunk_3d_lo[0] + 1)
         ay = max(1, self.chunk_3d_hi[1] - self.chunk_3d_lo[1] + 1)
         az = max(1, self.chunk_3d_hi[2] - self.chunk_3d_lo[2] + 1)
@@ -448,7 +440,7 @@ class pyrandaMPI:
 
         return gdata
 
-    def getIJK(self, data, I, J, K):
+    def getIJK(self, data, I, J, K):  # noqa: E741 (Ambiguous variable names)
         """
         Same as readData but only reads in global range of data given by
         irange.
@@ -561,8 +553,6 @@ class pyrandaMPI:
     def ghostx(self, data, np):
 
         bx = data.shape[0]
-        by = data.shape[1]
-        bz = data.shape[2]
 
         i = numpy.ascontiguousarray(data[np : 2 * np, :, :])
         o = i * 0.0
@@ -589,9 +579,7 @@ class pyrandaMPI:
 
     def ghosty(self, data, np):
 
-        bx = data.shape[0]
         by = data.shape[1]
-        bz = data.shape[2]
 
         i = numpy.ascontiguousarray(data[:, np : 2 * np, :])
         o = i * 0.0
@@ -618,8 +606,6 @@ class pyrandaMPI:
 
     def ghostz(self, data, np):
 
-        bx = data.shape[0]
-        by = data.shape[1]
         bz = data.shape[2]
 
         i = numpy.ascontiguousarray(data[:, :, np : 2 * np])

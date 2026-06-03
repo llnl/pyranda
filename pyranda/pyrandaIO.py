@@ -275,7 +275,7 @@ variables:   #NVARS#  # number of variables
   #VARS#
 timesteps:    #NVIZ#  # number of times to plot
   #CYCTIME#
-"""
+"""  # noqa: F841 (what is going on in this function?)
         # form = form.replace('#AX#',str(self.PyMPI.chunk_3d_size[0]))
         # form = form.replace('#AY#',str(self.PyMPI.chunk_3d_size[1]))
         # form = form.replace('#AZ#',str(self.PyMPI.chunk_3d_size[2]))

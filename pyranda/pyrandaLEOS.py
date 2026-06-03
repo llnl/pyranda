@@ -173,16 +173,16 @@ class leosFunc:
             N = self.Npts
 
         # Force floats to arrays
-        if type(rho) == type(0.0):
+        if type(rho) is type(0.0):
             rho = numpy.array([rho])
 
-        if type(T) == type(0.0):
+        if type(T) is type(0.0):
             T = numpy.array([T])
 
         if hasattr(self.eosFunc, "eval_iDDDDDo"):
             x = leospy.VectorOfDoubles(rho)
             y = leospy.VectorOfDoubles(T)
-            if type(Var) == type(numpy.array([])):
+            if type(Var) is type(numpy.array([])):
                 f = leospy.VectorOfDoubles(Var)
             else:
                 f = leospy.VectorOfDoubles(rho * 0.0)
@@ -211,16 +211,16 @@ class leosFunc:
             N = self.Npts
 
         # Force floats to arrays
-        if type(rho) == type(0.0):
+        if type(rho) is type(0.0):
             rho = numpy.array([rho])
 
-        if type(E) == type(0.0):
+        if type(E) is type(0.0):
             E = numpy.array([E])
 
         if hasattr(self.eosFunc, "inverseEval_iDDDDDo"):
             x = leospy.VectorOfDoubles(rho)
             E = leospy.VectorOfDoubles(E)
-            if type(Tg) == type(numpy.array([])):
+            if type(Tg) is type(numpy.array([])):
                 T = leospy.VectorOfDoubles(Tg)
             else:
                 T = leospy.VectorOfDoubles(rho * 0.0)

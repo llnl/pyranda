@@ -9,7 +9,6 @@
 ################################################################################
 import numpy
 import scipy.interpolate as SI
-import scipy.interpolate as spint
 import scipy.spatial.qhull as qhull
 from scipy.spatial import KDTree as KDTree
 
@@ -75,9 +74,6 @@ class ipoint:
         if nonX or nonY:
             self.onProc = False
             return
-
-        x0 = numpy.abs(xgrid[ii, jj] - self.x)
-        y0 = numpy.abs(ygrid[ii, jj] - self.y)
 
         self.ii0 = ii
         self.jj0 = jj

@@ -232,6 +232,7 @@ class pyrandaPlot:
 
         return xx
 
+    # ruff :noqa (i, j, k defined implicitly)
     def getLine(self, data, slice2d):
 
         nx = self.pyranda.nx

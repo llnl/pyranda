@@ -16,7 +16,7 @@ from distutils.command.install import install
 
 try:
     import mpi4py
-    from numpy import f2py
+    from numpy import f2py  # noqa: F401 (ignore attempted import)
 except ImportError as e:
     print(e)
     print("some modules need to be installed before building pyranda")

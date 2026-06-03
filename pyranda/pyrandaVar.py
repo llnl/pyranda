@@ -44,7 +44,7 @@ class pyrandaVar:
 
     def sum(self, axis=None, idata=None):
 
-        if type(idata) != type(self.data):
+        if type(idata) is not type(self.data):
             idata = self.data
 
         # Vector variables not  fully supported with axis
@@ -56,11 +56,11 @@ class pyrandaVar:
             ]
 
         # For no axis, return global sum
-        if axis == None:
+        if axis is None:
             return self.PyMPI.sum3D(idata)
 
         # Sum along 2 directions
-        if type(axis) == type(()) or type(axis) == type([]):
+        if type(axis) is type(()) or type(axis) is type([]):
             if len(axis) == 2:
                 if (0 in axis) and (1 in axis):
                     return self.PyMPI.xysum(idata)
@@ -74,7 +74,7 @@ class pyrandaVar:
                 )
                 return None
         # Sum along 1 directions
-        elif type(axis) == type(0):
+        elif type(axis) is type(0):
             if axis == 0:
                 return self.PyMPI.xsum(idata)
             if axis == 1:
@@ -116,9 +116,9 @@ class pyrandaVar:
             if isinstance(given[i], slice):
                 start = given[i].start
                 stop = given[i].stop
-                if start == None:
+                if start is None:
                     start = 0
-                if stop == None:
+                if stop is None:
                     stop = NX[i]
             else:
                 start = given[i]

@@ -17,7 +17,7 @@ along with Conduction.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 try:
-    range = xrange
+    range = xrange  # noqa: F821 (marked as undefined)
 except Exception:
     pass
 
@@ -94,16 +94,16 @@ class MeshVariable(object):
         return self._ldata
 
 
-def sum_duplicates(I, J, V):
+def sum_duplicates(row, col, val):
     """
     Sum all duplicate entries in the matrix
     """
-    order = np.lexsort((J, I))
-    I, J, V = I[order], J[order], V[order]
-    unique_mask = (I[1:] != I[:-1]) | (J[1:] != J[:-1])
+    order = np.lexsort((col, val))
+    row, col, val = row[order], col[order], val[order]
+    unique_mask = (row[1:] != row[:-1]) | (col[1:] != col[:-1])
     unique_mask = np.append(True, unique_mask)
     (unique_inds,) = np.nonzero(unique_mask)
-    return I[unique_mask], J[unique_mask], np.add.reduceat(V, unique_inds)
+    return row[unique_mask], col[unique_mask], np.add.reduceat(val, unique_inds)
 
 
 class ConductionND(object):
@@ -263,13 +263,7 @@ class ConductionND(object):
 
     def _initialise_boundary_dictionary(self):
 
-        coords = self.coords
-        grid_coords = self.grid_coords
         dim = self.dim
-
-        minCoords = coords.min(axis=0)
-        maxCoords = coords.max(axis=0)
-
         bbox = self.dm.getBoundingBox()
         sizes = self.dm.getSizes()
 
@@ -473,9 +467,7 @@ class ConductionND(object):
             mat = self._initialise_matrix()
 
         nodes = self.nodes
-        nn = self.nn
         n = self.n
-        dim = self.dim
 
         index = self.index
 
