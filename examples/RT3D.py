@@ -1,9 +1,6 @@
-import re
 import sys
-import time
 import numpy
 import matplotlib.pyplot as plt
-from matplotlib import cm
 
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 

@@ -4,11 +4,11 @@ import scipy
 import scipy.linalg
 import scipy.sparse
 import scipy.sparse.linalg
+import time
 
 # import matplotlib; matplotlib.use('Qt4Agg')
 # import matplotlib.pylab as plt
-import time
-from math import sinh
+from matplotlib import cm
 
 import matplotlib.pyplot as plt
 
@@ -90,10 +90,6 @@ for j in range(1, ny + 1):
     for i in range(1, nx + 1):
         T[j, i] = theta[j + (i - 1) * ny - 1]
 
-
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 fig = plt.figure()
 ax = fig.gca(projection="3d")

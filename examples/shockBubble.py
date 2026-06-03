@@ -60,7 +60,7 @@ ss = pyrandaSim(name, mesh_options)
 ss.addPackage(pyrandaBC(ss))  # Allows for bc.* functions
 ss.addPackage(pyrandaTimestep(ss))  # Allows for "dt.*" functions
 
-eom = f"""
+eom = """
 # Primary Equations of Motion (4-eqn model)
 ddt(:rhoYA:) =  -div(:rhoYA:*:u: - :Jx: , :rhoYA:*:v: - :Jy:  )
 ddt(:rhoYB:) =  -div(:rhoYB:*:u: + :Jx: , :rhoYB:*:v: + :Jy:  )
@@ -136,7 +136,7 @@ EOMDict["Et_shock"] = Et_shock
 ss.EOM(eom, EOMDict)
 
 # Define the initial condition
-ic = f"""
+ic = """
 s1 = (1 - 2*eps) * (0.5 * (1.0 - tanh( (meshx - (Vx0_shock)) / (Vst*Vdx) ))) + eps
 r  = sqrt( (meshx - Vbx0)**2 + (meshy - Vby0)**2 )
 s2 = (1 - 2*eps) * (0.5 * (1.0 - tanh( (r - Vr0) / (Vst*Vdx) ))) + eps

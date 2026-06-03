@@ -1,15 +1,6 @@
-from mpi4py import MPI
 import numpy
-import re
-import sys
-import time
-
-# TODO: remove
-sys.path.append("/Users/olson45/Research/FloATPy")
-
 import matplotlib.pyplot as plt
-
-from pyranda import pyrandaSim, pyrandaMPI
+from pyranda import pyrandaSim
 
 
 Npts = 64

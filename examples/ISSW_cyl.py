@@ -1,12 +1,10 @@
 from __future__ import print_function
 import sys
-import time
 import numpy
-import matplotlib.pyplot as plt
 from matplotlib import cm
+from meshTest import zoomMesh_solve
 
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM
-from pyranda.pyranda import pyrandaRestart
 
 # ss = pyrandaRestart('cylinder_curvilinear','000435')
 # Try to get args for testing
@@ -35,8 +33,6 @@ gamma = 1.4
 problem = "cyl_ISSWtest"
 
 Lp = L * (Npts - 1.0) / Npts
-
-from meshTest import zoomMesh_solve
 
 dxf = 4 * Lp / float(Npts) * 0.3
 xS = zoomMesh_solve(Npts, -2.0 * Lp, 2.0 * Lp, -2.0, 2.0, 1.0, dxf)

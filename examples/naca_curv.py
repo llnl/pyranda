@@ -1,10 +1,8 @@
 from __future__ import print_function
 import sys
-import time
 import numpy
-import matplotlib.pyplot as plt
 from matplotlib import cm
-
+from omesh import naca_omesh
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM
 
 
@@ -37,7 +35,6 @@ Lp = L * (Npts - 1.0) / Npts
 
 
 # Make and load an NACA mesh
-from omesh import naca_omesh
 
 NACA = "2412"
 nx = 300

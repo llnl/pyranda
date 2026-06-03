@@ -1,11 +1,9 @@
 from __future__ import print_function
 import sys
-import time
 import numpy
-import matplotlib.pyplot as plt
 from matplotlib import cm
 
-from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM
+from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 
 
 # Try to get args for testing
@@ -145,11 +143,11 @@ ss.EOM(eom)
 # Initialize variables
 ic = """
 :gamma: = 1.4
-:R: = 1.0/:gamma: 
+:R: = 1.0/:gamma:
 :cp: = :R: / (1.0 - 1.0/:gamma: )
 :cv: = :cp: - :R:
-#rad = sqrt( (meshx-numpy.pi)**2  +  (meshy-numpy.pi)**2 ) 
-rad = sqrt( meshx**2  +  meshy**2 ) 
+#rad = sqrt( (meshx-numpy.pi)**2  +  (meshy-numpy.pi)**2 )
+rad = sqrt( meshx**2  +  meshy**2 )
 :rho: = 1.0 + 3d()
 :p:  =  1.0/:gamma: + 3d() #exp( -(meshx-1.5)**2/.25**2)*.1
 :u: = mach * sqrt( :p: / :rho: * :gamma:)

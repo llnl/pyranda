@@ -1,5 +1,3 @@
-import sys
-import time
 import numpy
 import matplotlib.pyplot as plt
 from pyranda import pyrandaSim
@@ -35,7 +33,6 @@ def gridAdv(npts, cfl=1.0):
         time = pysim.rk4(time, dt)
         dt = min(dt, (tfinal - time))
 
-    x = pysim.mesh.coords[0].data
     phi = pysim.variables["phi"].data
     phi0 = pysim.variables["phi0"].data
 

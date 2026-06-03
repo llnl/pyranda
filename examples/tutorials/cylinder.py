@@ -2,6 +2,9 @@ import sys
 import numpy
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM
 
+sys.path.append("../")
+from meshTest import zoomMesh_solve
+
 
 ## Define a mesh
 Npts = 64
@@ -12,9 +15,6 @@ gamma = 1.4
 problem = "cylinder"
 
 Lp = L * (Npts - 1.0) / Npts
-
-sys.path.append("../")
-from meshTest import zoomMesh_solve
 
 dxf = 4 * Lp / float(Npts) * 0.3
 xS = zoomMesh_solve(Npts, -2.0 * Lp, 2.0 * Lp, -2.0, 2.0, 1.0, dxf)

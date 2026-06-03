@@ -1,10 +1,6 @@
 import numpy
-import re
-import sys
-import time
-
 import matplotlib.pyplot as plt
-from pyranda.pyranda import pyrandaSim, pyrandaMPI
+from pyranda.pyranda import pyrandaSim
 
 
 ## Define a mesh

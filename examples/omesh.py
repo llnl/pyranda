@@ -177,7 +177,6 @@ def naca_omesh(
     unew = npy.arange(0, 1.0, 1.0 / Fpts)
 
     # Add stretched meshing.. 0 and 0.5
-    unewI = npy.arange(0, Fpts, 1)
     wgt = []
     wsum = 0
     for i in range(Fpts):

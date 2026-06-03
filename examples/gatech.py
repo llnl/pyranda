@@ -17,7 +17,6 @@
 #
 #
 ################################################################################
-import sys
 import numpy
 import matplotlib.pyplot as plt
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep

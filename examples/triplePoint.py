@@ -1,4 +1,5 @@
 import numpy
+import sys
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 
 ## Define a mesh
@@ -15,8 +16,6 @@ mwH = 1.0  # Molecular weight of heavy
 myGamma = 1.4  # Gamma of gases (single gamma)
 gammaL = 1.4
 gammaH = 1.5
-
-import sys
 
 try:
     res = int(sys.argv[1])

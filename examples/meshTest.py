@@ -1,4 +1,6 @@
 import numpy
+
+# ruff :noqa (optional plotting via commented code)
 import matplotlib.pyplot as plt
 
 

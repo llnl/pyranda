@@ -1,9 +1,6 @@
-import re
 import sys
-import time
 import numpy
 import matplotlib.pyplot as plt
-from matplotlib import cm
 
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 
@@ -342,4 +339,5 @@ while time < tstop:
 
             plt.pause(0.001)
 
+            # ruff :noqa (raw_input marked as undefined)
             raw_input("Poop")

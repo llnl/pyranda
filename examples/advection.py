@@ -2,9 +2,9 @@ import os
 import shutil
 import sys
 import tempfile
-import time
-
 import numpy
+
+from pyranda import pyrandaSim
 
 if "MPLCONFIGDIR" not in os.environ:
     mplconfigdir = os.path.join(tempfile.gettempdir(), "mpl-pyranda")
@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 
 headless = "agg" in plt.get_backend().lower()
 
-from pyranda import pyrandaSim
 
 # Try to get args
 try:

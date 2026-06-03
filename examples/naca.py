@@ -34,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from math import cos, sin, tan
+from math import cos, sin
 from math import atan
 from math import pi
 from math import pow

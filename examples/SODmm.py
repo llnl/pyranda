@@ -129,16 +129,16 @@ bc.const(['uB'],['xn'],0.0)
 :rhoA:         = ibmS( :rhoA: , :phi:, [:gx:,:gy:,:gz:] )
 [:uA:,:v:,:w:] = ibmV( [:uA:,:v:,0.0], :phi:, [:gx:,:gy:,:gz:], [:uphi:,0.0,0.0] )
 :pA:          = ibmS( :pA: , :phi:, [:gx:,:gy:,:gz:] )
-:EtA:         = :pA: / ( :gamma: - 1.0 ) + .5*:rhoA:*(:uA:*:uA:) 
+:EtA:         = :pA: / ( :gamma: - 1.0 ) + .5*:rhoA:*(:uA:*:uA:)
 :rhouA:        = :rhoA:*:uA:
 :rhoB:         = ibmS( :rhoB: , -:phi:, [-:gx:,-:gy:,-:gz:] )
 [:uB:,:v:,:w:] = ibmV( [:uB:,:v:,0.0], -:phi:, [-:gx:,-:gy:,-:gz:], [:uphi:,0.0,0.0] )
 :pB:          = ibmS( :pB: , -:phi:, [-:gx:,-:gy:,-:gz:] )
-:EtB:         = :pB: / ( :gamma: - 1.0 ) + .5*:rhoB:*(:uB:*:uB:) 
+:EtB:         = :pB: / ( :gamma: - 1.0 ) + .5*:rhoB:*(:uB:*:uB:)
 :rhouB:        = :rhoB:*:uB:
 # Artificial bulk viscosity (old school way)
-:divA:       =  ddx(:uA:) 
-:divB:       =  ddx(:uB:) 
+:divA:       =  ddx(:uA:)
+:divB:       =  ddx(:uB:)
 #:divphi:     =  ddx(:uphi:)
 :betaA:      =  gbar( ring(:divA:) * :rhoA:) * 7.0e-2
 :betaB:      =  gbar( ring(:divB:) * :rhoB:) * 7.0e-2
@@ -159,10 +159,10 @@ pert    = .0*exp( -abs(meshx-1.0)**2/(.2**2))
 :rhoA:  = (1.0 + 3d()) * ( 1.0 + pert*(:gamma:-1) )
 :uA:    = pert
 :rhouA: = :rhoA: * :uA:
-:EtA:   = :pA: / ( :gamma: - 1.0 ) + .5*:rhoA:*(:uA:*:uA:) 
+:EtA:   = :pA: / ( :gamma: - 1.0 ) + .5*:rhoA:*(:uA:*:uA:)
 :pB: = gbar(where(meshx < pi, 10.0, 1.0)) * ( 1.0 + pert)
 :EtB:   =  :pB:/(:gamma:-1.0)
-:rhoB:  = 0.125 + 3d() 
+:rhoB:  = 0.125 + 3d()
 :phi:   = pi - meshx
 """
 
@@ -255,6 +255,7 @@ while tt > time:
     cnt += 1
     if viz:
         if (ss.PyMPI.master and (cnt % viz_freq == 0)) and True:
+            # ruff :noqa (marked as undefined?)
             poo = raw_input("fff")
             updatePlots()
 

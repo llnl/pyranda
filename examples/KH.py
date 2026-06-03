@@ -1,6 +1,7 @@
 # KH.py - Kelvin-Helmholtz paper of McNally et. al.
-from pyranda import *
-import sys, numpy
+from pyranda import pyrandaSim, pyrandaTimestep
+import sys
+import numpy
 
 problem = "KelvinHelmholtz"
 

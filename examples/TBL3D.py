@@ -1,7 +1,6 @@
-import sys
 import numpy
-from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM, pyrandaTBL
-
+from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaTBL
+from equation_library import euler_3d_dir as euler_3d
 
 ## Define a mesh
 problem = "myTBL"
@@ -89,10 +88,6 @@ TBL.del_BL = 2.5 / 100.0  # Data val at BL / physical location
 TBL.tauX = 2.5
 ss.addPackage(TBL)
 
-
-# Import 3D Euler-curvilinear
-# from equation_library import euler_3d
-from equation_library import euler_3d_dir as euler_3d
 
 euler_3d += """
 bc.const(['u','v','w'],['y1'],0.0)
