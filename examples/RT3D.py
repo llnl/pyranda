@@ -256,6 +256,14 @@ if not test:
 mixW = []
 timeW = []
 
+# numpy.trapz was renamed to numpy.trapezoid in NumPy 2.0. The old name still
+# exists in 2.x but is deprecated; the new name doesn't exist before 2.0.
+# Bind whichever this NumPy version offers.
+try:
+    _trapezoid = numpy.trapezoid
+except AttributeError:
+    _trapezoid = numpy.trapz
+
 while time < tstop:
     # Update the EOM and get next dt
     time = ss.rk4(time, dt)
@@ -268,7 +276,7 @@ while time < tstop:
 
     if ss.cycle % viz_freq == 0:
         mixW.append(
-            numpy.trapezoid(ss.var("mix").mean(axis=[1, 2]), ss.var("meshx")[:, 0, 0])
+            _trapezoid(ss.var("mix").mean(axis=[1, 2]), ss.var("meshx")[:, 0, 0])
         )
         timeW.append(time)
 
