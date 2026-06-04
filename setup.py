@@ -10,7 +10,7 @@ import os
 import sys
 import shutil
 import subprocess
-from setuptools import setup
+from setuptools import setup, Command
 from distutils.command.build import build
 from distutils.command.install import install
 
@@ -260,6 +260,77 @@ class TestPyranda(install, PyrandaMakeMixin):
         PyrandaMakeMixin.test(self)
 
 
+class LintPyranda(Command):
+    description = "format and lint Python files with ruff"
+    user_options = [
+        ("target=", None, "file or directory to lint; defaults to the whole repo"),
+    ]
+
+    def initialize_options(self):
+        self.target = None
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # Resolve an optional target path BEFORE we cd, since it's relative to
+        # the caller's current directory, not the repo root.
+        raw_target = self.target
+        if raw_target is None:
+            target = "."
+        elif os.path.isabs(raw_target):
+            target = raw_target
+        else:
+            target = os.path.join(os.getcwd(), raw_target)
+
+        # Run from the repo root so ruff finds its config.
+        try:
+            repo_root = (
+                subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
+                .decode()
+                .strip()
+            )
+        except subprocess.CalledProcessError:
+            # git already printed a diagnostic to stderr.
+            sys.exit(1)
+        os.chdir(repo_root)
+
+        if target != "." and not os.path.exists(target):
+            print(
+                "error: no such file or directory: {}".format(raw_target),
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        # Locate ruff inside the project venv (Linux/macOS and Windows git-bash).
+        posix_ruff = os.path.join(".venv", "bin", "ruff")
+        windows_ruff = os.path.join(".venv", "Scripts", "ruff.exe")
+        if os.access(posix_ruff, os.X_OK):
+            ruff = posix_ruff
+        elif os.access(windows_ruff, os.X_OK):
+            ruff = windows_ruff
+        else:
+            print("error: ruff not found in .venv", file=sys.stderr)
+            print("  Set up the environment first:", file=sys.stderr)
+            print("    python -m venv .venv", file=sys.stderr)
+            print("    .venv/bin/pip install -r requirements.txt", file=sys.stderr)
+            sys.exit(1)
+
+        if target == ".":
+            print("Running ruff on all Python files in the repo...")
+        else:
+            print("Running ruff on: {}".format(target))
+
+        # Either command failing exits non-zero and blocks the commit.
+        try:
+            subprocess.check_call([ruff, "format", target])  # apply formatting
+            subprocess.check_call([ruff, "check", target])  # lint
+        except subprocess.CalledProcessError as e:
+            sys.exit(e.returncode)
+
+        print("ruff: all checks passed.")
+
+
 setup_args = dict(
     name=distname,
     description=description,
@@ -271,6 +342,7 @@ setup_args = dict(
         "install": InstallPyranda,
         "clean": CleanPyranda,
         "runtest": TestPyranda,
+        "lint": LintPyranda,
     },
 )
 
