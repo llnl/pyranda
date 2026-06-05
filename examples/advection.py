@@ -2,9 +2,9 @@ import os
 import shutil
 import sys
 import tempfile
-import time
-
 import numpy
+
+from pyranda import pyrandaSim
 
 if "MPLCONFIGDIR" not in os.environ:
     mplconfigdir = os.path.join(tempfile.gettempdir(), "mpl-pyranda")
@@ -18,22 +18,21 @@ import matplotlib.pyplot as plt
 
 headless = "agg" in plt.get_backend().lower()
 
-from pyranda import pyrandaSim
 
 # Try to get args
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 100
 
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 ## Define a mesh
-L = numpy.pi * 2.0  
-Lp = L * (Npts-1.0) / Npts
+L = numpy.pi * 2.0
+Lp = L * (Npts - 1.0) / Npts
 
 
 # Define the domain/mesh
@@ -41,10 +40,10 @@ imesh = """
 Lp = %s
 Npts = %d
 xdom = (0.0, Lp,  Npts, periodic=True)
-""" % ( Lp, Npts)
+""" % (Lp, Npts)
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim('advection',imesh)
+ss = pyrandaSim("advection", imesh)
 
 # Define the equations of motion
 ss.EOM(" ddt(:phi:)  =  -:c: * ddx(:phi:) ")
@@ -59,15 +58,15 @@ r   = sqrt( (meshx-pi)**2  )
 """
 ss.setIC(ic)
 
-#ss.variables["u"].data += 1.0
+# ss.variables["u"].data += 1.0
 
-x  = ss.mesh.coords[0].data
-xx =  ss.PyMPI.zbar( x )
+x = ss.mesh.coords[0].data
+xx = ss.PyMPI.zbar(x)
 
 # Time step size
 v = 1.0
-dt_max = v / ss.mesh.nn[0] * L * .90
-tt = L/v * 1.0 
+dt_max = v / ss.mesh.nn[0] * L * 0.90
+tt = L / v * 1.0
 
 
 # Main time loop for physics
@@ -76,48 +75,42 @@ cnt = 1
 time = 0.0
 viz = not headless
 while tt > time:
+    # raw_input('Pause...')
 
-
-    #raw_input('Pause...')
-    
-    time = ss.rk4(time,dt)
-    dt = min(dt_max, (tt - time) )
+    time = ss.rk4(time, dt)
+    dt = min(dt_max, (tt - time))
 
     if not test:
-        ss.iprint("%s -- %s" % (cnt,time)  )
+        ss.iprint("%s -- %s" % (cnt, time))
 
     # Plot animation of advection
     cnt += 1
     if viz:
-        v = ss.PyMPI.zbar( ss.variables['phi'].data )
-        if (ss.PyMPI.master and (cnt%5 == 0)) and (not test):
+        v = ss.PyMPI.zbar(ss.variables["phi"].data)
+        if (ss.PyMPI.master and (cnt % 5 == 0)) and (not test):
             plt.figure(1)
             plt.clf()
-            plt.plot(xx[:,0],v[:,0] ,'k.-')
-            plt.pause(.001)
+            plt.plot(xx[:, 0], v[:, 0], "k.-")
+            plt.pause(0.001)
 
 
-phi = ss.variables['phi'].data
-phi2 = ss.variables['phi2'].data
-error = numpy.sum( (phi-phi2)**2  )
-ss.iprint( error ) 
-            
-
+phi = ss.variables["phi"].data
+phi2 = ss.variables["phi2"].data
+error = numpy.sum((phi - phi2) ** 2)
+ss.iprint(error)
 
 
 if test == 0 and not headless:
     # Latex/PDF generation
     ss.setupLatex()
-    ss.latex.tMap[":phi:"] = r'\phi'
-    ss.latex.tMap[":phi2:"] = r'\phi_2'
+    ss.latex.tMap[":phi:"] = r"\phi"
+    ss.latex.tMap[":phi2:"] = r"\phi_2"
 
-    
     intro = ss.latex.addSection("Introduction")
     intro.body = """
     This brief document shows the ability to integrate the simulation with formal 
     documentation.  The advection equations is solved and plotted below.
     """
-
 
     equations = ss.latex.addSection("Equations of Motion")
     equations.body = """
@@ -126,23 +119,20 @@ if test == 0 and not headless:
     """
     equations.body += ss.latex.renderEqu()
 
-
-    initial = ss.latex.addSection("Initial Conditions",1)
+    initial = ss.latex.addSection("Initial Conditions", 1)
     initial.body = """
     The problem is initialized given the following formulae:
     """
     initial.body += ss.latex.renderEqu(kind="IC")
 
-
     results = ss.latex.addSection("Results")
-    results.addFigure("Profiles",size=.45)
+    results.addFigure("Profiles", size=0.45)
     results.body = "Here in the figure, we see the final profile of the advection"
 
     plt.figure()
-    plt.plot( xx[:,0], ((phi-phi2)**2)[:,0,0] )
-    results.addFigure("Error",size=.45)
-    
-    
+    plt.plot(xx[:, 0], ((phi - phi2) ** 2)[:, 0, 0])
+    results.addFigure("Error", size=0.45)
+
     texcache = os.path.join(tempfile.gettempdir(), "texlive-pyranda")
     os.makedirs(texcache, exist_ok=True)
     os.environ.setdefault("TEXMFVAR", texcache)

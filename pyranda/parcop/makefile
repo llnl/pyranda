@@ -57,11 +57,9 @@ python.Iflags  = -I$(shell $(python) -c "from sysconfig import get_config_var; p
 python.libdir  = $(shell $(python) -c "from sysconfig import get_config_var; print(get_config_var('LIBDIR'))")
 python.version = $(shell $(python) -c "from sysconfig import get_config_var; print(get_config_var('VERSION'))")
 python.abiflag = $(shell $(python) -c "import sys; print(getattr(sys,'abiflags',''))")
-# TODO: how should we do this so it's portable?
-#python.Lflags  = -L$(python.libdir) -Wl,-R$(python.libdir)
-python.Lflags  = -L$(python.libdir) -Wl,-rpath=$(python.libdir)
+python.Lflags  = -L$(python.libdir) -Wl,-rpath,$(python.libdir)
 python.lflags  = -lpython$(python.version)$(python.abiflag)
-mpi.rpathflags = $(shell $(mpif90) -show 2>/dev/null | tr ' ' '\n' | awk '/^-L/ {sub(/^-L/,""); printf "-Wl,-rpath=%s ", $$0}')
+mpi.rpathflags = $(shell $(mpif90) -show 2>/dev/null | tr ' ' '\n' | awk '/^-L/ {sub(/^-L/,""); printf "-Wl,-rpath,%s ", $$0}')
 
 numpy.dir    = $(shell $(python) -c "import numpy; print(numpy.__path__[0])")
 numpy.include = $(shell $(python) -c "import numpy; print(numpy.get_include())")

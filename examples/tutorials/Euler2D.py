@@ -13,18 +13,18 @@ from numpy import pi
 
 # Domain is specified with a "mesh dictionary"
 mesh_options = {}
-mesh_options['x1'] = [ 0.0    , 0.0     , 0.0 ]
-mesh_options['xn'] = [ 2.0*pi , 2.0*pi  , 1.0 ]
-mesh_options['nn'] = [ 64     , 64      ,  1  ]
+mesh_options["x1"] = [0.0, 0.0, 0.0]
+mesh_options["xn"] = [2.0 * pi, 2.0 * pi, 1.0]
+mesh_options["nn"] = [64, 64, 1]
 
-ss = pyrandaSim('sod',mesh_options)
+ss = pyrandaSim("sod", mesh_options)
 
 
-ss.addPackage( pyrandaBC(ss) )
+ss.addPackage(pyrandaBC(ss))
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)                  - ddy(:rho:*:v:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)   - ddy(:rhou:*:v:)
@@ -64,12 +64,12 @@ rad = sqrt( (meshx-pi)**2  +  (meshy-pi)**2 )
 ss.setIC(ic)
 
 # Approx a max dt and stopping time
-dt = .01
-tt = .75
+dt = 0.01
+tt = 0.75
 time = 0.0
 while tt > time:
-    time = ss.rk4(time,dt)
+    time = ss.rk4(time, dt)
 
 ss.plot.figure(1)
 ss.plot.clf()
-ss.plot.contourf('umag',16)
+ss.plot.contourf("umag", 16)

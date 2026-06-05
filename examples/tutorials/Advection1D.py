@@ -15,7 +15,7 @@ from pyranda import pyrandaSim
 domain = "xdom = (0.0 , 1.0 , 100 )"
 
 # Initialize a simulation object on a mesh
-pysim = pyrandaSim('advection',domain)
+pysim = pyrandaSim("advection", domain)
 
 # Define the equations of motion
 pysim.EOM("ddt(:phi:)  =  - ddx(:phi:)")
@@ -24,18 +24,10 @@ pysim.EOM("ddt(:phi:)  =  - ddx(:phi:)")
 pysim.setIC(":phi: = 1.0 + 0.1 * exp( -(abs(meshx-.5)/.1 )**2 )")
 
 # Integrate in time
-dt = .001 
+dt = 0.001
 time = 0.0
-while time < .1:
-    time = pysim.rk4(time,dt)
+while time < 0.1:
+    time = pysim.rk4(time, dt)
 
 # Plot solution
-pysim.plot.plot('phi')
-    
-
-
-
-
-            
-
-
+pysim.plot.plot("phi")

@@ -1,47 +1,47 @@
-import numpy 
+import numpy
+import sys
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 
 ## Define a mesh
-problem = 'TriplePointGammaSmall'             # Problem name: used for data output
-nx = 350 #700                            # Points in x
-ny = 150 #300                            # Points in y
-dim = 2                             # Dimension of the problem
-open_angle  = 45.0                  # Total opening angle in degrees
-open_angle *= (numpy.pi / 180.0)    # Convert to radians
-L_min = 2.0                         # Width of tube at inner radius
-h = 10.0                            # Height is y direction
-mwL = 1.0                           # Molecular weight of light
-mwH = 1.0                           # Molecular weight of heavy
-myGamma = 1.4                       # Gamma of gases (single gamma)
+problem = "TriplePointGammaSmall"  # Problem name: used for data output
+nx = 350  # 700                            # Points in x
+ny = 150  # 300                            # Points in y
+dim = 2  # Dimension of the problem
+open_angle = 45.0  # Total opening angle in degrees
+open_angle *= numpy.pi / 180.0  # Convert to radians
+L_min = 2.0  # Width of tube at inner radius
+h = 10.0  # Height is y direction
+mwL = 1.0  # Molecular weight of light
+mwH = 1.0  # Molecular weight of heavy
+myGamma = 1.4  # Gamma of gases (single gamma)
 gammaL = 1.4
 gammaH = 1.5
 
-import sys
 try:
-    res = int( sys.argv[1] )
+    res = int(sys.argv[1])
     nx *= res
     ny *= res
-except:
+except Exception:
     pass
 
 
 # Define a python dictionary for the mesh/problem
 mesh_options = {}
-mesh_options['dim'] = dim             # Dimension of the problem
-mesh_options['nn'] = [ nx, ny , 1 ]   # Grid spacing
-mesh_options['x1'] = [ 0   , 0    ,  0.0 ]
-mesh_options['xn'] = [ 7.0 , 3.0  ,  0.0 ]
-mesh_options['periodic'] = [False, False, False]
+mesh_options["dim"] = dim  # Dimension of the problem
+mesh_options["nn"] = [nx, ny, 1]  # Grid spacing
+mesh_options["x1"] = [0, 0, 0.0]
+mesh_options["xn"] = [7.0, 3.0, 0.0]
+mesh_options["periodic"] = [False, False, False]
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim(problem,mesh_options)
+ss = pyrandaSim(problem, mesh_options)
 
 # Add packages to simulation object
-ss.addPackage( pyrandaBC(ss) )          # BC package allows for "bc.*" functions
-ss.addPackage( pyrandaTimestep(ss) )    # Timestep package allows for "dt.*" functions
+ss.addPackage(pyrandaBC(ss))  # BC package allows for "bc.*" functions
+ss.addPackage(pyrandaTimestep(ss))  # Timestep package allows for "dt.*" functions
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rhoYh:) =  -div(:rhoYh:*:u: - :Jx: , :rhoYh:*:v: - :Jy:  )
 ddt(:rhoYl:) =  -div(:rhoYl:*:u: + :Jx: , :rhoYl:*:v: + :Jy:  )
@@ -114,7 +114,7 @@ bc.extrap(['v'] , ['x1','xn'], order=1 )
 """
 
 # Add the EOM to the solver
-ss.EOM(eom,{'mwH':mwH,'mwL':mwL,'gammaL':gammaL,'gammaH':gammaH})
+ss.EOM(eom, {"mwH": mwH, "mwL": mwL, "gammaL": gammaL, "gammaH": gammaH})
 
 
 # Initial conditions of the flow
@@ -150,16 +150,15 @@ bot = 1.0 - driver - top
 :dt: = dt.courant(:u:,:v:,:w:,:cs:)
 """
 icDict = {}
-icDict['gammaL'] = gammaL
-icDict['gammaH'] = gammaH
-icDict['mwH']     = mwH
-icDict['mwL']     = mwL
-
+icDict["gammaL"] = gammaL
+icDict["gammaH"] = gammaH
+icDict["mwH"] = mwH
+icDict["mwL"] = mwL
 
 
 # Set the initial conditions
-ss.setIC(ic,icDict)
-    
+ss.setIC(ic, icDict)
+
 # Write a time loop
 time = 0.0
 viz = True
@@ -168,53 +167,54 @@ viz = True
 tt = 5.0
 
 # Variables to write to viz.
-wvars = ['Yh','rho','u','v','p','beta','kappa','adiff','mu']
+wvars = ["Yh", "rho", "u", "v", "p", "beta", "kappa", "adiff", "mu"]
 
 # Start time loop
 dump_freq = 2000
 CFL = 1.0
-dt = ss.variables['dt'].data * CFL*.01
+dt = ss.variables["dt"].data * CFL * 0.01
 
 viz_freq = tt / 20.0
 viz_dump = viz_freq
 
+
 def myIO():
-    ss.write( wvars )
+    ss.write(wvars)
     ss.plot.figure(1)
     ss.plot.clf()
-    ss.plot.contourf('lrho',64 )    
-
+    ss.plot.contourf("lrho", 64)
 
 
 myIO()
 
-while time < tt :
-    
+while time < tt:
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = min( ss.variables['dt'].data * CFL, dt*1.1)
-    dt = min(dt, (tt - time) )
+    time = ss.rk4(time, dt)
+    dt = min(ss.variables["dt"].data * CFL, dt * 1.1)
+    dt = min(dt, (tt - time))
 
-    stab_type = ''
+    stab_type = ""
     # Simulation heart-beat
-    if dt == ss.variables['dtB'].data:
-        stab_type = 'bulk'
-    elif dt == ss.variables['dtM'].data:
-        stab_type = 'shear'
-    elif dt == ss.variables['dtY'].data:
-        stab_type = 'diffusion'
+    if dt == ss.variables["dtB"].data:
+        stab_type = "bulk"
+    elif dt == ss.variables["dtM"].data:
+        stab_type = "shear"
+    elif dt == ss.variables["dtY"].data:
+        stab_type = "diffusion"
     else:
         stab_type = "CFL"
-        
-    ss.iprint("Cycle: %5d --- Time: %10.4e --- deltat: %10.4e ( %s )" % (ss.cycle,time,dt,stab_type)  )
 
+    ss.iprint(
+        "Cycle: %5d --- Time: %10.4e --- deltat: %10.4e ( %s )"
+        % (ss.cycle, time, dt, stab_type)
+    )
 
     # Constant time
     if time > viz_dump:
         viz_dump += viz_freq
         myIO()
-        
-    if (ss.cycle%dump_freq == 0) :
+
+    if ss.cycle % dump_freq == 0:
         ss.writeRestart()
 
 myIO()

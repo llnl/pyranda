@@ -1,1 +1,1 @@
-from .parcop import parcop
+from .parcop import parcop as parcop

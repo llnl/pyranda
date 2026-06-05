@@ -1,30 +1,25 @@
-import re
-import sys
-import time
-import numpy 
+import numpy
 import matplotlib.pyplot as plt
-from matplotlib import cm
 
 from pyranda import pyrandaSim, pyrandaBC
-from pyranda.pyranda import pyrandaRestart
 
 
 ## Define a mesh
 L = numpy.pi * 2.0
 Npts = 200
-Lp = L * (Npts-1.0) / Npts
+Lp = L * (Npts - 1.0) / Npts
 
 imesh = """
 xdom = (0.0, Lp, Npts)
-""".replace('Lp',str(Lp)).replace('Npts',str(Npts))
+""".replace("Lp", str(Lp)).replace("Npts", str(Npts))
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim('sod',imesh)
-ss.addPackage( pyrandaBC(ss) )
+ss = pyrandaSim("sod", imesh)
+ss.addPackage(pyrandaBC(ss))
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)
@@ -58,7 +53,7 @@ ic = """
 
 # Set the initial conditions
 ss.setIC(ic)
-    
+
 
 # Write a time loop
 time = 0.0
@@ -66,31 +61,29 @@ time = 0.0
 # Approx a max dt and stopping time
 v = 1.0
 dt_max = v / ss.mesh.nn[0] * 0.75
-tt = L/v * .25 #dt_max
+tt = L / v * 0.25  # dt_max
 
 # Start time loop
 dt = dt_max
 cnt = 1
 viz_freq = 25
-pvar = 'rho'
+pvar = "rho"
 viz = True
 
 while tt > time:
-
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = min(dt_max, (tt - time) )
-    
+    time = ss.rk4(time, dt)
+    dt = min(dt_max, (tt - time))
+
     # Print some output
-    ss.iprint("%s -- %s" % (cnt,time)  )
+    ss.iprint("%s -- %s" % (cnt, time))
     cnt += 1
     if viz:
-
-        if (cnt%viz_freq == 0):
+        if cnt % viz_freq == 0:
             ss.plot.figure(1)
             plt.clf()
-            ss.plot.plot(pvar,'b.-')
+            ss.plot.plot(pvar, "b.-")
 
-        
+
 ss.writeGrid()
 ss.write()

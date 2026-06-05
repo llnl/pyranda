@@ -1,9 +1,5 @@
-import re
 import sys
-import time
-import numpy 
-import matplotlib.pyplot as plt
-from matplotlib import cm
+import numpy
 
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 
@@ -11,43 +7,49 @@ from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 64
 
 try:
     is2D = bool(int(sys.argv[2]))
-except:
+except Exception:
     is2D = True
-
 
 
 ## Define a mesh
 if is2D:
-    problem = 'RM_2D'
-    imesh = """
+    problem = "RM_2D"
+    imesh = (
+        """
     xdom = (0.0, 2.8*pi , int(Npts*1.4), periodic=False) 
     ydom = (0.0, 2*pi*FF,  Npts, periodic=True)
     zdom = (0.0, 2*pi*FF,  1, periodic=True)
-    """.replace('Npts',str(Npts)).replace('pi',str(numpy.pi)).replace('FF',str( float(Npts-1)/Npts ) )
+    """.replace("Npts", str(Npts))
+        .replace("pi", str(numpy.pi))
+        .replace("FF", str(float(Npts - 1) / Npts))
+    )
     waveLength = 4
 else:
-    problem = 'RM_3D'
-    imesh = """
+    problem = "RM_3D"
+    imesh = (
+        """
     xdom = (0.0, 3.0*pi , int(Npts*1.5), periodic=False) 
     ydom = (0.0, 2*pi*FF,  Npts, periodic=True)
     zdom = (0.0, 2*pi*FF,  Npts, periodic=True)
-    """.replace('Npts',str(Npts)).replace('pi',str(numpy.pi)).replace('FF',str( float(Npts-1)/Npts ) )
+    """.replace("Npts", str(Npts))
+        .replace("pi", str(numpy.pi))
+        .replace("FF", str(float(Npts - 1) / Npts))
+    )
     waveLength = 4
-    
 
-    
+
 # Initialize a simulation object on a mesh
-ss = pyrandaSim(problem,imesh)
-ss.addPackage( pyrandaTimestep(ss) )
-ss.addPackage( pyrandaBC(ss) )
+ss = pyrandaSim(problem, imesh)
+ss.addPackage(pyrandaTimestep(ss))
+ss.addPackage(pyrandaBC(ss))
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rhoYh:)  =  -ddx(:rhoYh:*:u: - :Jx:)    - ddy(:rhoYh:*:v: - :Jy:)   - ddz(:rhoYh:*:w: - :Jz:)
 ddt(:rhoYl:)  =  -ddx(:rhoYl:*:u: + :Jx:)    - ddy(:rhoYl:*:v: + :Jy:)   - ddz(:rhoYl:*:w: + :Jz:)
@@ -173,12 +175,12 @@ Amp = 3.5 + .05*(sin(meshy*L) + cos(meshz*L) ) + .25*gbar( random3D() - .5 )
 :tke: = :rho:*(:u:*:u: + :v:*:v: + :w:*:w:)
 :dt: = dt.courant(:u:,:v:,:w:,:cs:)
 """
-ic_dict = {'waveLength':waveLength}
-ic_dict['delta'] = 2.0* numpy.pi / Npts * 4  
+ic_dict = {"waveLength": waveLength}
+ic_dict["delta"] = 2.0 * numpy.pi / Npts * 4
 
 # Set the initial conditions
-ss.setIC(ic,ic_dict)
-    
+ss.setIC(ic, ic_dict)
+
 # Length scale for art. viscosity
 # Initialize variables
 x = ss.mesh.coords[0].data
@@ -190,13 +192,13 @@ time = 0.0
 
 # Start time loop
 CFL = 1.0
-dt = ss.variables['dt'].data * CFL
+dt = ss.variables["dt"].data * CFL
 
 # Viz/IO
 viz_freq = 20
 dmp_freq = 100
 
-tke0 = ss.var('tke').sum()
+tke0 = ss.var("tke").sum()
 TKE = []
 TIME = []
 
@@ -206,81 +208,74 @@ leftOn = False
 rightOn = False
 
 
-dtmax = dt * .1
+dtmax = dt * 0.1
 
-outVars = ['p','u','v','w','rho','Yh']
+outVars = ["p", "u", "v", "w", "rho", "Yh"]
 ss.write(outVars)
 
 while time < tstop:
-
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = ss.variables['dt'].data * CFL
-    dt = min( dt, dtmax*1.1)
-    dtmax = dt*1.0
-    
+    time = ss.rk4(time, dt)
+    dt = ss.variables["dt"].data * CFL
+    dt = min(dt, dtmax * 1.1)
+    dtmax = dt * 1.0
 
     # Print some output
-    tke = ss.var('tke').sum()/tke0
+    tke = ss.var("tke").sum() / tke0
     TIME.append(time)
-    TKE.append(tke)    
+    TKE.append(tke)
 
-    ss.iprint("%s -- %s --- TKE: %s " % (ss.cycle,time,tke)  ) 
-    
+    ss.iprint("%s -- %s --- TKE: %s " % (ss.cycle, time, tke))
+
     if 1:
-
-        rho = ss.variables['rho'].data
-        rhoL = ss.variables['rhoYh'].data
-        rhoR = ss.variables['rhoYl'].data
-        Yh  = ss.variables['Yh'].data
-        u   = ss.variables['u'].data
-        v   = ss.variables['v'].data
-        p   = ss.variables['p'].data
-        Et  = ss.variables['Et'].data            
+        rho = ss.variables["rho"].data
+        rhoL = ss.variables["rhoYh"].data
+        rhoR = ss.variables["rhoYl"].data
+        Yh = ss.variables["Yh"].data
+        u = ss.variables["u"].data
+        v = ss.variables["v"].data
+        p = ss.variables["p"].data
+        Et = ss.variables["Et"].data
 
         # Time specific BCs for letting shock/refraction out
-        if (time > .010):
+        if time > 0.010:
             if not leftOn:
-                 wgt = numpy.exp( -(x-2.0)**2/.1**2 )
-                 pleft = ss.PyMPI.sum3D( wgt * p ) / ss.PyMPI.sum3D( wgt )
-                 eleft = ss.PyMPI.sum3D( wgt * Et ) / ss.PyMPI.sum3D( wgt )
-                 rleft = ss.PyMPI.sum3D( wgt * rhoL ) / ss.PyMPI.sum3D( wgt )
-                 rholeft = ss.PyMPI.sum3D( wgt * rho ) / ss.PyMPI.sum3D( wgt )
-                 leftOn = True
-                 
-            ss.variables['Et'].data = numpy.where( x < 2.0 , eleft, Et )
-            ss.variables['rhou'].data = numpy.where( x < 2.0 , 0.0  , u*rho )
-            ss.variables['rho'].data = numpy.where( x < 2.0 , rholeft  , rho )
-            ss.variables['rhoYh'].data = numpy.where( x < 2.0 , rleft  , rhoL )
+                wgt = numpy.exp(-((x - 2.0) ** 2) / 0.1**2)
+                pleft = ss.PyMPI.sum3D(wgt * p) / ss.PyMPI.sum3D(wgt)
+                eleft = ss.PyMPI.sum3D(wgt * Et) / ss.PyMPI.sum3D(wgt)
+                rleft = ss.PyMPI.sum3D(wgt * rhoL) / ss.PyMPI.sum3D(wgt)
+                rholeft = ss.PyMPI.sum3D(wgt * rho) / ss.PyMPI.sum3D(wgt)
+                leftOn = True
 
+            ss.variables["Et"].data = numpy.where(x < 2.0, eleft, Et)
+            ss.variables["rhou"].data = numpy.where(x < 2.0, 0.0, u * rho)
+            ss.variables["rho"].data = numpy.where(x < 2.0, rholeft, rho)
+            ss.variables["rhoYh"].data = numpy.where(x < 2.0, rleft, rhoL)
 
-        if (time > .016):
+        if time > 0.016:
             if not rightOn:
-                 wgt = numpy.exp( -(x-7.0)**2/.1**2 )
-                 pright = ss.PyMPI.sum3D( wgt * p ) / ss.PyMPI.sum3D( wgt )
-                 eright = ss.PyMPI.sum3D( wgt * Et ) / ss.PyMPI.sum3D( wgt )
-                 rright = ss.PyMPI.sum3D( wgt * rhoR ) / ss.PyMPI.sum3D( wgt )
-                 rhoright = ss.PyMPI.sum3D( wgt * rho ) / ss.PyMPI.sum3D( wgt )
-                 rightOn = True
-                 
-            ss.variables['Et'].data = numpy.where( x > 7.0 , eright, Et )
-            ss.variables['rhou'].data = numpy.where( x > 7.0 , 0.0  , u*rho )
-            ss.variables['rho'].data = numpy.where( x > 7.0 , rhoright  , rho )
-            ss.variables['rhoYl'].data = numpy.where( x > 7.0 , rright  , rhoR )
+                wgt = numpy.exp(-((x - 7.0) ** 2) / 0.1**2)
+                pright = ss.PyMPI.sum3D(wgt * p) / ss.PyMPI.sum3D(wgt)
+                eright = ss.PyMPI.sum3D(wgt * Et) / ss.PyMPI.sum3D(wgt)
+                rright = ss.PyMPI.sum3D(wgt * rhoR) / ss.PyMPI.sum3D(wgt)
+                rhoright = ss.PyMPI.sum3D(wgt * rho) / ss.PyMPI.sum3D(wgt)
+                rightOn = True
 
-        
-        if ( ss.cycle%viz_freq == 0 ) :
+            ss.variables["Et"].data = numpy.where(x > 7.0, eright, Et)
+            ss.variables["rhou"].data = numpy.where(x > 7.0, 0.0, u * rho)
+            ss.variables["rho"].data = numpy.where(x > 7.0, rhoright, rho)
+            ss.variables["rhoYl"].data = numpy.where(x > 7.0, rright, rhoR)
 
+        if ss.cycle % viz_freq == 0:
             # 2D contour plots
-            
+
             ss.plot.figure(1)
             ss.plot.clf()
-            ss.plot.contourf( 'rho', 32, cmap='jet')
+            ss.plot.contourf("rho", 32, cmap="jet")
 
             ss.plot.figure(2)
             ss.plot.clf()
-            ss.plot.plot('rho','k-')    
+            ss.plot.plot("rho", "k-")
 
-        if ( ss.cycle%dmp_freq == 0) :
+        if ss.cycle % dmp_freq == 0:
             ss.write(outVars)
-            

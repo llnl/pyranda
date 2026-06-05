@@ -8,3 +8,4 @@ pyranda.egg-info
 *.a
 pyranda/parcop/parcopmodule.c
 pyranda/parcop/parcop-f2pywrappers2.f90
+.venv/

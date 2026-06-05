@@ -1,7 +1,5 @@
 import sys
-import numpy 
-import matplotlib.pyplot as plt
-from matplotlib import cm
+import numpy
 
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM
 
@@ -9,56 +7,56 @@ from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 64
 
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 try:
-    testName = (sys.argv[3])
-except:
+    testName = sys.argv[3]
+except Exception:
     testName = None
 
 
 ## Define a mesh
-#Npts = 32
-L = numpy.pi * 2.0  
+# Npts = 32
+L = numpy.pi * 2.0
 dim = 2
 gamma = 1.4
 
-problem = 'cylinder_test'
+problem = "cylinder_test"
 
-Lp = L * (Npts-1.0) / Npts
+Lp = L * (Npts - 1.0) / Npts
 mesh_options = {}
-mesh_options['coordsys'] = 0
-mesh_options['periodic'] = numpy.array([False, False, False])
-mesh_options['dim'] = 3
-mesh_options['x1'] = [ 0.0 , 0.0  ,  0.0 ]
-mesh_options['xn'] = [ Lp   , Lp    ,  Lp ]
-mesh_options['nn'] = [ Npts , Npts ,  1  ]
+mesh_options["coordsys"] = 0
+mesh_options["periodic"] = numpy.array([False, False, False])
+mesh_options["dim"] = 3
+mesh_options["x1"] = [0.0, 0.0, 0.0]
+mesh_options["xn"] = [Lp, Lp, Lp]
+mesh_options["nn"] = [Npts, Npts, 1]
 
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim(problem,mesh_options)
-ss.addPackage( pyrandaBC(ss) )
-ss.addPackage( pyrandaIBM(ss) )
-ss.addPackage( pyrandaTimestep(ss) )
+ss = pyrandaSim(problem, mesh_options)
+ss.addPackage(pyrandaBC(ss))
+ss.addPackage(pyrandaIBM(ss))
+ss.addPackage(pyrandaTimestep(ss))
 
 
 rho0 = 1.0
-p0   = 1.0
+p0 = 1.0
 gamma = 1.4
 mach = 2.0
-s0 = numpy.sqrt( p0 / rho0 * gamma )
+s0 = numpy.sqrt(p0 / rho0 * gamma)
 u0 = s0 * mach
-e0 = p0/(gamma-1.0) + rho0*.5*u0*u0
+e0 = p0 / (gamma - 1.0) + rho0 * 0.5 * u0 * u0
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)                  - ddy(:rho:*:v:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)   - ddy(:rhou:*:v:)
@@ -100,7 +98,7 @@ bc.const(['p'],['x1','y1','yn'],p0)
 :dt: = numpy.minimum(:dt:,:dtB:)
 :umag: = sqrt( :u:*:u: + :v:*:v: )
 """
-eom = eom.replace('u0',str(u0)).replace('p0',str(p0)).replace('rho0',str(rho0))
+eom = eom.replace("u0", str(u0)).replace("p0", str(p0)).replace("rho0", str(rho0))
 
 
 # Add the EOM to the solver
@@ -130,7 +128,7 @@ rad = sqrt( (meshx-pi)**2  +  (meshy-pi)**2 )
 :gx: = gbar( :gx: )
 :gy: = gbar( :gy: )
 """
-ic = ic.replace('mach',str(mach))
+ic = ic.replace("mach", str(mach))
 
 # Set the initial conditions
 ss.setIC(ic)
@@ -141,42 +139,41 @@ time = 0.0
 viz = True
 
 # Approx a max dt and stopping time
-tt = 1.5 #
+tt = 1.5  #
 
 # Start time loop
 cnt = 1
 viz_freq = 25
 
-wvars = ['p','rho','u','v','phi']
+wvars = ["p", "rho", "u", "v", "phi"]
 if not test:
-    ss.write( wvars )
+    ss.write(wvars)
 CFL = 1.0
-dt = ss.variables['dt'].data * CFL * .1
+dt = ss.variables["dt"].data * CFL * 0.1
 
 while tt > time:
-    
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = min(ss.variables['dt'].data * CFL, 1.1*dt)
-    dt = min(dt, (tt - time) )
+    time = ss.rk4(time, dt)
+    dt = min(ss.variables["dt"].data * CFL, 1.1 * dt)
+    dt = min(dt, (tt - time))
 
     # Print some output
-    ss.iprint("%s -- %s --- %f" % (cnt,time,dt)  )
+    ss.iprint("%s -- %s --- %f" % (cnt, time, dt))
     cnt += 1
     if viz and (not test):
-        if (cnt%viz_freq == 1): 
-            ss.write( wvars )
-                   
+        if cnt % viz_freq == 1:
+            ss.write(wvars)
+
 
 # Curve test.  Write file and print its name at the end
 if test:
     x = ss.mesh.coords[0].data
-    xx   =  ss.PyMPI.zbar( x )
-    pvar = 'p'
-    v = ss.PyMPI.zbar( ss.variables[pvar].data )
+    xx = ss.PyMPI.zbar(x)
+    pvar = "p"
+    v = ss.PyMPI.zbar(ss.variables[pvar].data)
     ny = ss.PyMPI.ny
-    v1d =  v[:,int(ny/2)]
-    x1d = xx[:,int(ny/2)]
-    fname = testName + '.dat'
-    numpy.savetxt( fname  , (x1d,v1d) )
+    v1d = v[:, int(ny / 2)]
+    x1d = xx[:, int(ny / 2)]
+    fname = testName + ".dat"
+    numpy.savetxt(fname, (x1d, v1d))
     print(fname)

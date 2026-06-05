@@ -1,5 +1,5 @@
 # Define the equations of motion
-euler_1d ="""
+euler_1d = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)
@@ -39,7 +39,7 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: ) - ddy( (:Et: + :p: - :tau:)*:v: 
 """
 
 
-euler_3d ="""
+euler_3d = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -div(:rho:*:u:  ,  :rho:*:v: , :rho:*:w:)
 ddt(:rhou:) =  -div(:rhou:*:u: - :tauxx: , :rhou:*:v: - :tauxy:, :rhou:*:w: - :tauxz:)
@@ -79,7 +79,7 @@ ddt(:Et:)   =  -div( (:Et: - :tauxx:)*:u: - :tauxy:*:v: - :tauxz:*:w: , (:Et: - 
 """
 
 
-euler_3d_dir ="""
+euler_3d_dir = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -div(:rho:*:u:  ,  :rho:*:v: , :rho:*:w:)
 ddt(:rhou:) =  ( -ddx( :FAu:*:detJ: ) - ddy( :FBu:*:detJ: ) - ddz( :FCu:*:detJ: ) ) / :detJ:

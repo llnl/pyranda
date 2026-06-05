@@ -1,42 +1,40 @@
 from __future__ import print_function
 import sys
-import time
-import numpy 
-import matplotlib.pyplot as plt
+import numpy
 from matplotlib import cm
 
-from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM
+from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 
 
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 64
 
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 try:
-    testName = (sys.argv[3])
-except:
+    testName = sys.argv[3]
+except Exception:
     testName = None
 
 
 ## Define a mesh
 # Npts = 32
-L = numpy.pi * 2.0  
+L = numpy.pi * 2.0
 dim = 2
 gamma = 1.4
 
-problem = 'cylinder_O_grid'
+problem = "cylinder_O_grid"
 
-Lp = L * (Npts-1.0) / Npts
+Lp = L * (Npts - 1.0) / Npts
 
-Ri = 0.5       # cylinder radius
-Rf = 10.0      # Farfield distance
+Ri = 0.5  # cylinder radius
+Rf = 10.0  # Farfield distance
 tlength = 2.0  # tanh parameter to set the stretching [2,2.5]
 
 NX = Npts
@@ -45,53 +43,60 @@ NY = Npts
 
 rho0 = 1.0
 gamma = 1.4
-p0   = 1.0/gamma
+p0 = 1.0 / gamma
 mach = 0.3
-s0 = numpy.sqrt( p0 / rho0 * gamma )
+s0 = numpy.sqrt(p0 / rho0 * gamma)
 u0 = s0 * mach
 v0 = 0.0
 w0 = 0.0
-e0 = p0/(gamma-1.0) + rho0*.5*u0*u0
+e0 = p0 / (gamma - 1.0) + rho0 * 0.5 * u0 * u0
 
 
-
-def cylMesh(i,j,k):
-    theta =  float(i) / float(NX) * 2.0 * numpy.pi
-    aux = numpy.tanh(tlength*j/(NY-1)-tlength)      # [tanh(-tlength),0]
-    r = (aux/numpy.tanh(tlength) +1.0)*Rf+Ri        # scaling between [Ri,Rf]   
-    x = r * numpy.cos( theta )
-    y = r * numpy.sin( theta )
+def cylMesh(i, j, k):
+    theta = float(i) / float(NX) * 2.0 * numpy.pi
+    aux = numpy.tanh(tlength * j / (NY - 1) - tlength)  # [tanh(-tlength),0]
+    r = (aux / numpy.tanh(tlength) + 1.0) * Rf + Ri  # scaling between [Ri,Rf]
+    x = r * numpy.cos(theta)
+    y = r * numpy.sin(theta)
     z = 0.0
-    return x,y,z
+    return x, y, z
 
 
 mesh_options = {}
-mesh_options['coordsys'] = 3
-mesh_options['function'] = cylMesh
-mesh_options['periodic'] = numpy.array([True, False, True])
-mesh_options['gridPeriodic'] = numpy.array([True, False, False])
-mesh_options['dim'] = 3
-mesh_options['x1'] = [ -2*Lp , -2*Lp  ,  0.0 ]
-mesh_options['xn'] = [ 2*Lp   , 2*Lp    ,  Lp ]
-mesh_options['nn'] = [ NX, NY ,  1  ]
-
+mesh_options["coordsys"] = 3
+mesh_options["function"] = cylMesh
+mesh_options["periodic"] = numpy.array([True, False, True])
+mesh_options["gridPeriodic"] = numpy.array([True, False, False])
+mesh_options["dim"] = 3
+mesh_options["x1"] = [-2 * Lp, -2 * Lp, 0.0]
+mesh_options["xn"] = [2 * Lp, 2 * Lp, Lp]
+mesh_options["nn"] = [NX, NY, 1]
 
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim(problem,mesh_options)
-BCpy =  pyrandaBC(ss)
+ss = pyrandaSim(problem, mesh_options)
+BCpy = pyrandaBC(ss)
 # setup for Farfield BC
-BCpy.BCdata["farfield-properties-yn"] = {'rho0':rho0,'p0':p0,'u0':u0,'v0':v0,'w0':w0,'gamma':gamma,
-                                        'rho':'rho','u':'u','v':'v','w':'w','p':'p'}
-ss.addPackage( BCpy) 
+BCpy.BCdata["farfield-properties-yn"] = {
+    "rho0": rho0,
+    "p0": p0,
+    "u0": u0,
+    "v0": v0,
+    "w0": w0,
+    "gamma": gamma,
+    "rho": "rho",
+    "u": "u",
+    "v": "v",
+    "w": "w",
+    "p": "p",
+}
+ss.addPackage(BCpy)
 
 # ss.addPackage( pyrandaIBM(ss) )
-ss.addPackage( pyrandaTimestep(ss) )
+ss.addPackage(pyrandaTimestep(ss))
 
 
-
-
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -div(:rho:*:u:,  :rho:*:v:)
 ddt(:rhou:) =  -div(:rhou:*:u: + :p: - :tau:, :rhou:*:v:)
@@ -128,7 +133,7 @@ bc.slip([ ['u','v']  ],['y1'])
 #:dt: = numpy.minimum(:dt:,:dtB:)
 :umag: = sqrt( :u:*:u: + :v:*:v: )
 """
-eom = eom.replace('u0',str(u0)).replace('p0',str(p0)).replace('rho0',str(rho0))
+eom = eom.replace("u0", str(u0)).replace("p0", str(p0)).replace("rho0", str(rho0))
 
 
 # Add the EOM to the solver
@@ -138,11 +143,11 @@ ss.EOM(eom)
 # Initialize variables
 ic = """
 :gamma: = 1.4
-:R: = 1.0/:gamma: 
+:R: = 1.0/:gamma:
 :cp: = :R: / (1.0 - 1.0/:gamma: )
 :cv: = :cp: - :R:
-#rad = sqrt( (meshx-numpy.pi)**2  +  (meshy-numpy.pi)**2 ) 
-rad = sqrt( meshx**2  +  meshy**2 ) 
+#rad = sqrt( (meshx-numpy.pi)**2  +  (meshy-numpy.pi)**2 )
+rad = sqrt( meshx**2  +  meshy**2 )
 :rho: = 1.0 + 3d()
 :p:  =  1.0/:gamma: + 3d() #exp( -(meshx-1.5)**2/.25**2)*.1
 :u: = mach * sqrt( :p: / :rho: * :gamma:)
@@ -153,7 +158,7 @@ rad = sqrt( meshx**2  +  meshy**2 )
 :cs:  = sqrt( :p: / :rho: * :gamma: )
 :dt: = dt.courant(:u:,:v:,:w:,:cs:)
 """
-ic = ic.replace('mach',str(mach))
+ic = ic.replace("mach", str(mach))
 
 
 # Set the initial conditions
@@ -169,60 +174,55 @@ tt = 25.0
 # Start time loop
 cnt = 1
 viz_freq = 100
-pvar = 'umag'
+pvar = "umag"
 
 CFL = 0.8
-dt = ss.variables['dt'].data * CFL * .1
+dt = ss.variables["dt"].data * CFL * 0.1
 
 
-
-if (not test):
-    
+if not test:
     ss.plot.figure(2)
-    ss.plot.clf()            
-    ss.plot.contourf(pvar ,64 , cmap=cm.jet)
-    ss.plot.contour( 'p',8,colors='black')
-    #ss.plot.showGrid()
+    ss.plot.clf()
+    ss.plot.contourf(pvar, 64, cmap=cm.jet)
+    ss.plot.contour("p", 8, colors="black")
+    # ss.plot.showGrid()
     ss.plot.title(pvar)
 
 
-
 while tt > time:
-    
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
+    time = ss.rk4(time, dt)
 
     # Time step controls
-    dt_msg = 'cfl'
-    dt = ss.variables['dt'].data * CFL
-    dtt = min( dt , 1.1*dt)
-    if ( dtt != dt ):
-        dt_msg = 'ramp'
+    dt_msg = "cfl"
+    dt = ss.variables["dt"].data * CFL
+    dtt = min(dt, 1.1 * dt)
+    if dtt != dt:
+        dt_msg = "ramp"
     dt = dtt
-    dtt = min( 0.2 * ss.variables['dtB'].data, dt)
-    if ( dtt != dt ):
-        dt_msg = 'bulk'
+    dtt = min(0.2 * ss.variables["dtB"].data, dt)
+    if dtt != dt:
+        dt_msg = "bulk"
     dt = dtt
-    dtt = min(dt, (tt - time) )
-    if ( dtt != dt ):
-        dt_msg = 'vis-dump'
+    dtt = min(dt, (tt - time))
+    if dtt != dt:
+        dt_msg = "vis-dump"
     dt = dtt
-    
-   
+
     # Print some output
-    ss.iprint("Cycle:%s -- Time:%.4e --- dt:%.4e --- Limit:%s" % (cnt,time,dt,dt_msg)  )
+    ss.iprint(
+        "Cycle:%s -- Time:%.4e --- dt:%.4e --- Limit:%s" % (cnt, time, dt, dt_msg)
+    )
     cnt += 1
     if viz and (not test):
+        if cnt % viz_freq == 1:
+            ss.write(["beta", "u", "v", "rho", "umag"])
 
-        if (cnt%viz_freq == 1) :
-            ss.write(['beta','u','v','rho','umag'])
-        
             ss.plot.figure(2)
-            ss.plot.clf()            
-            ss.plot.contourf(pvar ,64 , cmap=cm.jet)
-            ss.plot.contour( 'p', 8 ,colors='black')
+            ss.plot.clf()
+            ss.plot.contourf(pvar, 64, cmap=cm.jet)
+            ss.plot.contour("p", 8, colors="black")
             ss.plot.title(pvar)
-
 
 
 # Curve test.  Write file and print its name at the end
@@ -230,16 +230,15 @@ if test:
     # Initialize variables
     x = ss.mesh.coords[0].data
     y = ss.mesh.coords[1].data
-    
+
     # Mesh for viz on master
-    xx   =  ss.PyMPI.zbar( x )
-    yy   =  ss.PyMPI.zbar( y )
+    xx = ss.PyMPI.zbar(x)
+    yy = ss.PyMPI.zbar(y)
 
-    v = ss.PyMPI.zbar( ss.variables[pvar].data )
+    v = ss.PyMPI.zbar(ss.variables[pvar].data)
     ny = ss.PyMPI.ny
-    v1d =  v[:,int(ny/2)]
-    x1d = xx[:,int(ny/2)]
-    fname = testName + '.dat'
-    numpy.savetxt( fname  , (x1d,v1d) )
+    v1d = v[:, int(ny / 2)]
+    x1d = xx[:, int(ny / 2)]
+    fname = testName + ".dat"
+    numpy.savetxt(fname, (x1d, v1d))
     print(fname)
-

@@ -1,6 +1,5 @@
 import sys
-import time
-import numpy 
+import numpy
 import matplotlib.pyplot as plt
 
 from pyranda import pyrandaSim, pyrandaIBM
@@ -9,47 +8,47 @@ from pyranda import pyrandaSim, pyrandaIBM
 # Try to get args
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 128
 
-#import pdb
-#pdb.set_trace()
+# import pdb
+# pdb.set_trace()
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 try:
     diffusive = bool(int(sys.argv[3]))
-except:
+except Exception:
     diffusive = False
 
 
-#print sys.argv[2]
+# print sys.argv[2]
 
 ## Define a mesh
-L = numpy.pi * 2.0  
-Lp = L * (Npts-1.0) / Npts
+L = numpy.pi * 2.0
+Lp = L * (Npts - 1.0) / Npts
 twoD = False
 
 mesh_options = {}
-mesh_options['coordsys'] = 0
-mesh_options['periodic'] = numpy.array([twoD, twoD, True])
-mesh_options['dim'] = 3
-mesh_options['x1'] = [ 0.0 , 0.0  ,  0.0 ]
-mesh_options['xn'] = [ Lp   , Lp    ,  Lp ]
-mesh_options['nn'] = [ Npts, 1 ,  1  ]
+mesh_options["coordsys"] = 0
+mesh_options["periodic"] = numpy.array([twoD, twoD, True])
+mesh_options["dim"] = 3
+mesh_options["x1"] = [0.0, 0.0, 0.0]
+mesh_options["xn"] = [Lp, Lp, Lp]
+mesh_options["nn"] = [Npts, 1, 1]
 if twoD:
-    mesh_options['nn'] = [ Npts, Npts ,  1  ]
+    mesh_options["nn"] = [Npts, Npts, 1]
 
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim('advection',mesh_options)
-ss.addPackage( pyrandaIBM(ss) )
+ss = pyrandaSim("advection", mesh_options)
+ss.addPackage(pyrandaIBM(ss))
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u: - :tau:) - ddy(:rho:*:v: - :tau:) 
 ddt(:rhoA:)  =  -ddx(:rhoA:*:uA: - :tauA:) -ddy(:rhoA:*:vA: - :tauA:) 
@@ -82,9 +81,9 @@ x = ss.mesh.coords[0].data
 y = ss.mesh.coords[1].data
 z = ss.mesh.coords[2].data
 
-dx = (x[1,0,0] - x[0,0,0])
+dx = x[1, 0, 0] - x[0, 0, 0]
 
-rad = numpy.sqrt( (x-numpy.pi)**2 ) # + (y-numpy.pi)**2 ) #+ (z-numpy.pi)**2  )
+rad = numpy.sqrt((x - numpy.pi) ** 2)  # + (y-numpy.pi)**2 ) #+ (z-numpy.pi)**2  )
 
 diffAmp = 1.0
 if diffusive:
@@ -92,34 +91,38 @@ if diffusive:
 
 
 if not twoD:
-    ss.variables['rho'].data += ss.gfilter( numpy.where( x < numpy.pi*.25, diffAmp, 1.0 ) )
-    ss.variables['rhoA'].data += 1.0e6 * (1.0 + .1*numpy.exp(-(x-numpy.pi*1.5)**2/.01)  )
-    ss.variables['phi'].data = 3.14159 - x
-    ss.variables['uA'].data += 1.0
-    ss.variables['u'].data  += 1.0
-    ss.variables['u1'].data += 1.0
+    ss.variables["rho"].data += ss.gfilter(
+        numpy.where(x < numpy.pi * 0.25, diffAmp, 1.0)
+    )
+    ss.variables["rhoA"].data += 1.0e6 * (
+        1.0 + 0.1 * numpy.exp(-((x - numpy.pi * 1.5) ** 2) / 0.01)
+    )
+    ss.variables["phi"].data = 3.14159 - x
+    ss.variables["uA"].data += 1.0
+    ss.variables["u"].data += 1.0
+    ss.variables["u1"].data += 1.0
 
 else:
-    ss.variables['rho'].data  += 1.0 * numpy.sin( 4.0*x )
-    ss.variables['rhoA'].data += 1.0e6 * numpy.cos( 4.*y )
-    r = numpy.sqrt( (x-numpy.pi)**2 + (y-numpy.pi)**2 )
-    ss.variables['phi'].data = ss.gfilter( numpy.minimum( r - numpy.pi/4.0 , 10.0*dx ) )
-    ss.variables['vA'].data += 1.0
-    ss.variables['v'].data  += 1.0
-    ss.variables['v1'].data += 1.0
-    ss.variables['uA'].data += 1.0
-    ss.variables['u'].data  += 1.0
-    ss.variables['u1'].data += 1.0
+    ss.variables["rho"].data += 1.0 * numpy.sin(4.0 * x)
+    ss.variables["rhoA"].data += 1.0e6 * numpy.cos(4.0 * y)
+    r = numpy.sqrt((x - numpy.pi) ** 2 + (y - numpy.pi) ** 2)
+    ss.variables["phi"].data = ss.gfilter(numpy.minimum(r - numpy.pi / 4.0, 10.0 * dx))
+    ss.variables["vA"].data += 1.0
+    ss.variables["v"].data += 1.0
+    ss.variables["v1"].data += 1.0
+    ss.variables["uA"].data += 1.0
+    ss.variables["u"].data += 1.0
+    ss.variables["u1"].data += 1.0
 
-    
+
 # Try circles
 
 
 # Init momenta
-ss.variables['u1'].data = 1.0
+ss.variables["u1"].data = 1.0
 
-ss.variables['dx'].data += (x[1,0,0] - x[0,0,0])
-ss.variables['dx4'].data += (x[1,0,0] - x[0,0,0])**4
+ss.variables["dx"].data += x[1, 0, 0] - x[0, 0, 0]
+ss.variables["dx4"].data += (x[1, 0, 0] - x[0, 0, 0]) ** 4
 
 
 ss.updateVars()
@@ -129,65 +132,64 @@ viz = True
 
 v = 1.0
 
-dt_max = v / ss.mesh.nn[0] * L * .25
+dt_max = v / ss.mesh.nn[0] * L * 0.25
 
-tt = L/v * 1.0 #dt_max
+tt = L / v * 1.0  # dt_max
 if not twoD:
-    tt *= .2
+    tt *= 0.2
 
 
-xx   =  ss.PyMPI.zbar( x )
-yy   =  ss.PyMPI.zbar( y )
+xx = ss.PyMPI.zbar(x)
+yy = ss.PyMPI.zbar(y)
 
 dt = dt_max
 cnt = 1
 
-v2 = ss.PyMPI.zbar( ss.variables['rhoT'].data )
-#plt.figure(2)
-#plt.plot( xx[:,0],v2[:,0] )
-#plt.contourf( xx,yy,v2 ,64 )
-#plt.pause(.001)
-#import pdb
-#pdb.set_trace()
+v2 = ss.PyMPI.zbar(ss.variables["rhoT"].data)
+# plt.figure(2)
+# plt.plot( xx[:,0],v2[:,0] )
+# plt.contourf( xx,yy,v2 ,64 )
+# plt.pause(.001)
+# import pdb
+# pdb.set_trace()
 
 viz_freq = 5
 if twoD:
     viz_freq = 5
 
 while tt > time:
-
-    time = ss.rk4(time,dt)
-    dt = min(dt_max, (tt - time) )
+    time = ss.rk4(time, dt)
+    dt = min(dt_max, (tt - time))
 
     # Poor man's boundary condition
     if not twoD:
-        ss.variables['rho'].data[0,:,:] = diffAmp
-    
-    ss.iprint("%s -- %s" % (cnt,time)  )
+        ss.variables["rho"].data[0, :, :] = diffAmp
+
+    ss.iprint("%s -- %s" % (cnt, time))
     cnt += 1
     if viz and (not test):
-        v1 = ss.PyMPI.zbar( ss.variables['rhoA'].data )
-        v2 = ss.PyMPI.zbar( ss.variables['rhoT'].data )
-        v = ss.PyMPI.zbar( ss.variables['rho'].data )
-        vA = ss.PyMPI.zbar( ss.variables['rhoA'].data )
-        if ss.PyMPI.master and (cnt%viz_freq == 0) and True:
+        v1 = ss.PyMPI.zbar(ss.variables["rhoA"].data)
+        v2 = ss.PyMPI.zbar(ss.variables["rhoT"].data)
+        v = ss.PyMPI.zbar(ss.variables["rho"].data)
+        vA = ss.PyMPI.zbar(ss.variables["rhoA"].data)
+        if ss.PyMPI.master and (cnt % viz_freq == 0) and True:
             plt.figure(1)
             plt.clf()
-            plt.plot(xx[:,0],v2[:,0] ,'k.-')
-            #plt.plot(xx[:,0],v[:,0] ,'r.-')
-            #plt.plot(xx[:,0],vA[:,0] ,'b.-')
-            plt.pause(.001)
+            plt.plot(xx[:, 0], v2[:, 0], "k.-")
+            # plt.plot(xx[:,0],v[:,0] ,'r.-')
+            # plt.plot(xx[:,0],vA[:,0] ,'b.-')
+            plt.pause(0.001)
             if twoD:
                 plt.figure(2)
                 plt.clf()
-                plt.contourf( xx,yy,v2 , 8 )
-                plt.contour( xx,yy,v2 , 1 )
-                plt.pause(.001)
+                plt.contourf(xx, yy, v2, 8)
+                plt.contour(xx, yy, v2, 1)
+                plt.pause(0.001)
 
-            #import pdb
-            #pdb.set_trace()
+            # import pdb
+            # pdb.set_trace()
 
 
-v2 = ss.PyMPI.zbar( ss.variables['rhoT'].data )
-error = numpy.min( v2[int(Npts/2):,0] )
-ss.iprint( error )
+v2 = ss.PyMPI.zbar(ss.variables["rhoT"].data)
+error = numpy.min(v2[int(Npts / 2) :, 0])
+ss.iprint(error)

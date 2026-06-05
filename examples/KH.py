@@ -1,47 +1,48 @@
 # KH.py - Kelvin-Helmholtz paper of McNally et. al.
-from pyranda import *
-import sys,numpy
+from pyranda import pyrandaSim, pyrandaTimestep
+import sys
+import numpy
 
 problem = "KelvinHelmholtz"
 
 # Some global problem definitions
-gamma = 5./3.  # Ratio of specific heats
-p0    = 2.5    # Constant initial pressure value
-u1    =  0.5   # Forward velocity
-u2    = -0.5   # Backward velocity
-rho1  = 1.0    # Density of light
-rho2  = 2.0    # Density of heavy
-L     = 0.025  # Length scale of transition 
-Vmean = 0.0    # Convective offset
-tFinal = 1.5   # Final time
-R      = 1.0   # Gas constant
-test   = False # Run in test mode?
+gamma = 5.0 / 3.0  # Ratio of specific heats
+p0 = 2.5  # Constant initial pressure value
+u1 = 0.5  # Forward velocity
+u2 = -0.5  # Backward velocity
+rho1 = 1.0  # Density of light
+rho2 = 2.0  # Density of heavy
+L = 0.025  # Length scale of transition
+Vmean = 0.0  # Convective offset
+tFinal = 1.5  # Final time
+R = 1.0  # Gas constant
+test = False  # Run in test mode?
 
-cp = R / (1.0 - 1.0/gamma )
+cp = R / (1.0 - 1.0 / gamma)
 cv = cp - R
 
 # Grid size
 Npts = 128
 
-dt_max = 1.0 #e-3
+dt_max = 1.0  # e-3
 
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     pass
 
 try:
     Vmean = float(sys.argv[2]) * 1.0 / tFinal
-except:
+except Exception:
     pass
 
 try:
     problem += sys.argv[3]
-except:
+except Exception:
     pass
 try:
     test = bool(int(sys.argv[4]))
-except:
+except Exception:
     pass
 
 
@@ -49,16 +50,16 @@ except:
 mesh = """
 xdom = (0.0, len,  Npts, periodic=True)
 ydom = (0.0, len,  Npts, periodic=True)
-""".replace('Npts',str(Npts)).replace('len',str(1.0*(Npts-1.0)/Npts))
+""".replace("Npts", str(Npts)).replace("len", str(1.0 * (Npts - 1.0) / Npts))
 
-ss = pyrandaSim(problem,mesh)
+ss = pyrandaSim(problem, mesh)
 
 # Add "Timestep" package for dt.* functions
-ss.addPackage( pyrandaTimestep(ss) )
+ss.addPackage(pyrandaTimestep(ss))
 
 # Define the 2D Euler equations with AFLES terms
 
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)            - ddy(:rho:*:v:)               
 ddt(:rhou:) =  -ddx(:rhou:*:u: - :tauxx:) - ddy(:rhou:*:v: - :tauxy:)    
@@ -99,7 +100,7 @@ ddt(:Et:)   =  -ddx( (:Et: - :tauxx:)*:u: - :tauxy:*:v:  - :tx:*:kappa: )  - ddy
 """
 
 # Add the EOM to the solver
-ss.EOM(eom,{'gamma':gamma,'R0':R,'cv':cv})
+ss.EOM(eom, {"gamma": gamma, "R0": R, "cv": cv})
 
 
 # Define the initial conditions here
@@ -123,58 +124,65 @@ rhoM = (rho1-rho2)/2.0
 :cs:  = sqrt( :p: / :rho: * gamma )
 :dt: = dt.courant(:u:,:v:,:w:,:cs:)*.1
 """
-icDict = {'gamma':gamma,'u1':u1,'u2':u2,'p0':p0,
-          'rho1':rho1,'rho2':rho2,'L':L,'Vmean':Vmean}
+icDict = {
+    "gamma": gamma,
+    "u1": u1,
+    "u2": u2,
+    "p0": p0,
+    "rho1": rho1,
+    "rho2": rho2,
+    "L": L,
+    "Vmean": Vmean,
+}
 
-ss.setIC(ic,icDict)
+ss.setIC(ic, icDict)
 
 
 # Main time stepping loop
-viz_freq = .1
+viz_freq = 0.1
 
 # Variables to write to viz.
-wvars = ['rho','u','v','p','beta','kappa','mu','enst']
+wvars = ["rho", "u", "v", "p", "beta", "kappa", "mu", "enst"]
 
 
 time = 0.0
-dt = ss.var('dt').data
+dt = ss.var("dt").data
 viz_dump = viz_freq
 
 if not test:
-    ss.write( wvars )
+    ss.write(wvars)
 
 while tFinal > time:
-
-    time = ss.rk4(time,dt)
-    dt = min(ss.variables['dt'].data , 1.1*dt)
-    dt = min( dt_max, dt)
-    dt = min(dt, (tFinal - time) )
+    time = ss.rk4(time, dt)
+    dt = min(ss.variables["dt"].data, 1.1 * dt)
+    dt = min(dt_max, dt)
+    dt = min(dt, (tFinal - time))
 
     # Simulation heart-beat
-    ss.iprint("Cycle: %5d --- Time: %10.4e --- deltat: %10.4e" % (ss.cycle,time,dt)  )
+    ss.iprint("Cycle: %5d --- Time: %10.4e --- deltat: %10.4e" % (ss.cycle, time, dt))
 
     # Constant time
     if (time > viz_dump) and (not test):
-        ss.write( wvars )
+        ss.write(wvars)
         viz_dump += viz_freq
 
-        #ss.plot.figure(1)
-        #ss.plot.clf()
-        #ss.plot.contourf('rho',64 ) 
+        # ss.plot.figure(1)
+        # ss.plot.clf()
+        # ss.plot.contourf('rho',64 )
 if not test:
-    ss.write( wvars )
+    ss.write(wvars)
     ss.plot.figure(1)
     ss.plot.clf()
-    ss.plot.contourf('rho',64 )
+    ss.plot.contourf("rho", 64)
 
 # Curve test.  Write file and print its name at the end
 if test:
     ny = ss.PyMPI.ny
     x = ss.mesh.coords[0]
-    rho = ss.variables['rho']
-    islice = "j=%s;k=0" % (int(3*ny/4))
-    x1d = ss.plot.getLine( x.data  , islice )
-    v1d = ss.plot.getLine( rho.data, islice )
-    fname = problem + '.dat'
-    numpy.savetxt( fname  , (x1d,v1d) )
+    rho = ss.variables["rho"]
+    islice = "j=%s;k=0" % (int(3 * ny / 4))
+    x1d = ss.plot.getLine(x.data, islice)
+    v1d = ss.plot.getLine(rho.data, islice)
+    fname = problem + ".dat"
+    numpy.savetxt(fname, (x1d, v1d))
     print(fname)

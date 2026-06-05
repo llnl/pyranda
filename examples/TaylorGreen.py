@@ -1,8 +1,6 @@
 from __future__ import print_function
-import re
 import sys
-import time
-import numpy 
+import numpy
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
@@ -12,32 +10,36 @@ from pyranda import pyrandaSim, pyrandaTimestep
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 32
 
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
-problem = 'TGvortex'
+problem = "TGvortex"
 
 ## Define a mesh
-#Npts = 32
-imesh = """
+# Npts = 32
+imesh = (
+    """
 xdom = (0.0, 2*pi*FF,  Npts, periodic=True)
 ydom = (0.0, 2*pi*FF,  Npts, periodic=True)
 zdom = (0.0, 2*pi*FF,  Npts, periodic=True)
-""".replace('Npts',str(Npts)).replace('pi',str(numpy.pi)).replace('FF',str( float(Npts-1)/Npts ) )
+""".replace("Npts", str(Npts))
+    .replace("pi", str(numpy.pi))
+    .replace("FF", str(float(Npts - 1) / Npts))
+)
 
-    
+
 # Initialize a simulation object on a mesh
-ss = pyrandaSim(problem,imesh)
-ss.addPackage( pyrandaTimestep(ss) )
+ss = pyrandaSim(problem, imesh)
+ss.addPackage(pyrandaTimestep(ss))
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)            - ddy(:rho:*:v:)               - ddz(:rho:*:w:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: - :tauxx:) - ddy(:rhou:*:v: - :tauxy:)    - ddz(:rhou:*:w: - :tauxz:)
@@ -112,7 +114,7 @@ L = 1.0
 
 # Set the initial conditions
 ss.setIC(ic)
-    
+
 # Length scale for art. viscosity
 # Initialize variables
 x = ss.mesh.coords[0].data
@@ -125,63 +127,58 @@ viz = True
 
 # Start time loop
 CFL = 0.5
-dt = ss.variables['dt'].data * CFL
+dt = ss.variables["dt"].data * CFL
 
 # Viz
 cnt = 1
 viz_freq = 20
-pvar = 'u'
+pvar = "u"
 
-tke0 = ss.var('tke').sum()
-enst0 = ss.var('enst').sum()
+tke0 = ss.var("tke").sum()
+enst0 = ss.var("enst").sum()
 TKE = []
 ENST = []
 TIME = []
 
 tstop = 25.0
 if test:
-    tstop = .1
-    
-while time < tstop:
+    tstop = 0.1
 
+while time < tstop:
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = ss.variables['dt'].data * CFL
+    time = ss.rk4(time, dt)
+    dt = ss.variables["dt"].data * CFL
 
     # Print some output
-    tke = ss.var('tke').sum()/tke0
-    enst = ss.var('enst').sum()/enst0
+    tke = ss.var("tke").sum() / tke0
+    enst = ss.var("enst").sum() / enst0
 
     TIME.append(time)
     ENST.append(enst)
     TKE.append(tke)
-    
-    
-    ss.iprint("%s -- %s --- TKE: %s " % (cnt,time,tke)  )
+
+    ss.iprint("%s -- %s --- TKE: %s " % (cnt, time, tke))
     cnt += 1
     if viz:
-
         # Write viz data and plot
-        if (cnt%viz_freq == 0):
+        if cnt % viz_freq == 0:
             ss.write()
-            
+
             ss.plot.figure(2)
-            ss.plot.clf()            
-            ss.plot.contourf(pvar ,64 , slice3d='k=16', cmap=cm.jet)
-            ss.plot.title(pvar+',Time=%f' % time)
+            ss.plot.clf()
+            ss.plot.contourf(pvar, 64, slice3d="k=16", cmap=cm.jet)
+            ss.plot.title(pvar + ",Time=%f" % time)
 
 
-
-data = ss.PyMPI.subsum3xz( ss.mesh.coords[1].data ) / (Npts*Npts)
+data = ss.PyMPI.subsum3xz(ss.mesh.coords[1].data) / (Npts * Npts)
 if ss.PyMPI.master:
     print(data)
-            
+
 if test:
     print(enst)
 else:
-    if (ss.PyMPI.master):
+    if ss.PyMPI.master:
         plt.figure()
-        plt.plot(TIME,TKE,'k--')
-        plt.plot(TIME,ENST,'b--')
-        plt.show()            
-
+        plt.plot(TIME, TKE, "k--")
+        plt.plot(TIME, ENST, "b--")
+        plt.show()

@@ -11,12 +11,12 @@
 
 from pyranda import pyrandaSim, pyrandaBC
 
-ss = pyrandaSim('sod','xdom=(0.0,6.0,200)')
+ss = pyrandaSim("sod", "xdom=(0.0,6.0,200)")
 
-ss.addPackage( pyrandaBC(ss) )
+ss.addPackage(pyrandaBC(ss))
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)
@@ -56,7 +56,7 @@ tt = 1.5
 # Start time loop
 time = 0.0
 while tt > time:
-    time = ss.rk4(time,dt)
+    time = ss.rk4(time, dt)
 
 ss.plot.figure(1)
-ss.plot.plot('rho','b.-')
+ss.plot.plot("rho", "b.-")

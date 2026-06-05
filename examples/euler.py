@@ -1,61 +1,56 @@
 from __future__ import print_function
-import re
 import sys
-import time
-import numpy 
+import numpy
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
 from pyranda import pyrandaSim, pyrandaBC
 
 
-
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 128
 
-#import pdb
-#pdb.set_trace()
+# import pdb
+# pdb.set_trace()
 try:
     test = bool(int(sys.argv[2]))
-except:
+except Exception:
     test = False
 
 try:
-    testName = (sys.argv[3])
-except:
+    testName = sys.argv[3]
+except Exception:
     testName = None
 
 
-
-
 ## Define a mesh
-L = numpy.pi * 2.0  
+L = numpy.pi * 2.0
 gamma = 1.4
 dim = 2
 
-problem = 'sod'
+problem = "sod"
 
-Lp = L * (Npts-1.0) / Npts
+Lp = L * (Npts - 1.0) / Npts
 mesh_options = {}
-mesh_options['coordsys'] = 0
-mesh_options['periodic'] = numpy.array([False, False, True])
-mesh_options['dim'] = 3
-mesh_options['x1'] = [ 0.0 , 0.0  ,  0.0 ]
-mesh_options['xn'] = [ Lp   , Lp    ,  Lp ]
-mesh_options['nn'] = [ Npts, 1 ,  1  ]
+mesh_options["coordsys"] = 0
+mesh_options["periodic"] = numpy.array([False, False, True])
+mesh_options["dim"] = 3
+mesh_options["x1"] = [0.0, 0.0, 0.0]
+mesh_options["xn"] = [Lp, Lp, Lp]
+mesh_options["nn"] = [Npts, 1, 1]
 if dim == 2:
-    mesh_options['nn'] = [ Npts, Npts ,  1  ]
+    mesh_options["nn"] = [Npts, Npts, 1]
 
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim('advection',mesh_options)
-ss.addPackage( pyrandaBC(ss) )
+ss = pyrandaSim("advection", mesh_options)
+ss.addPackage(pyrandaBC(ss))
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)                  - ddy(:rho:*:v:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)   - ddy(:rhou:*:v:)
@@ -98,8 +93,8 @@ if dim == 2:
     ic = "rad = sqrt( (meshx-pi)**2  +  (meshy-pi)**2 ) "
 
 # Linear wave propagation in 1d and 2d
-if (problem == 'linear'):
-    pvar = 'p'
+if problem == "linear":
+    pvar = "p"
     ic += """
     :gamma: = 1.4
     ratio = 1.0 + 0.01 * exp( -(rad)**2/(.2**2) )
@@ -108,10 +103,10 @@ if (problem == 'linear'):
     """
 
 # SOD shock tube in 1d and 2d
-if (problem == 'sod'):
-    pvar = 'rho'
+if problem == "sod":
+    pvar = "rho"
     if dim == 1:
-        ic = 'rad = meshx / 2.0'
+        ic = "rad = meshx / 2.0"
     ic += """
     :gamma: = 1.4
     :Et:  = gbar( where( rad < pi/2.0, 1.0/(:gamma:-1.0) , .1 /(:gamma:-1.0) ) )
@@ -120,14 +115,14 @@ if (problem == 'sod'):
 
 # Set the initial conditions
 ss.setIC(ic)
-    
+
 # Length scale for art. viscosity
 # Initialize variables
 x = ss.mesh.coords[0].data
 y = ss.mesh.coords[1].data
 z = ss.mesh.coords[2].data
-#ss.variables['dx6'].data += (x[1,0,0] - x[0,0,0])**6
-#ss.variables['dx2'].data += (x[1,0,0] - x[0,0,0])**2
+# ss.variables['dx6'].data += (x[1,0,0] - x[0,0,0])**6
+# ss.variables['dx2'].data += (x[1,0,0] - x[0,0,0])**2
 
 
 # Write a time loop
@@ -137,11 +132,11 @@ viz = True
 # Approx a max dt and stopping time
 v = 1.0
 dt_max = v / ss.mesh.nn[0] * 0.75
-tt = L/v * .125 #dt_max
+tt = L / v * 0.125  # dt_max
 
 # Mesh for viz on master
-xx   =  ss.PyMPI.zbar( x )
-yy   =  ss.PyMPI.zbar( y )
+xx = ss.PyMPI.zbar(x)
+yy = ss.PyMPI.zbar(y)
 ny = ss.PyMPI.ny
 
 # Start time loop
@@ -150,39 +145,36 @@ cnt = 1
 viz_freq = 25
 
 while tt > time:
-
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = min(dt_max, (tt - time) )
+    time = ss.rk4(time, dt)
+    dt = min(dt_max, (tt - time))
 
-    
     # Print some output
-    ss.iprint("%s -- %s" % (cnt,time)  )
+    ss.iprint("%s -- %s" % (cnt, time))
     cnt += 1
     if viz and (not test):
-        v = ss.PyMPI.zbar( ss.variables[pvar].data )
-        if (ss.PyMPI.master and (cnt%viz_freq == 1)) and True:
+        v = ss.PyMPI.zbar(ss.variables[pvar].data)
+        if (ss.PyMPI.master and (cnt % viz_freq == 1)) and True:
             plt.figure(1)
             plt.clf()
-            if ( ny > 1):
-                plt.plot(xx[:,int(ny/2)],v[:,int(ny/2)] ,'k.-')
+            if ny > 1:
+                plt.plot(xx[:, int(ny / 2)], v[:, int(ny / 2)], "k.-")
                 plt.title(pvar)
-                plt.pause(.001)
+                plt.pause(0.001)
                 plt.figure(2)
-                plt.clf()            
-                plt.contourf( xx,yy,v ,64 , cmap=cm.jet)
+                plt.clf()
+                plt.contourf(xx, yy, v, 64, cmap=cm.jet)
             else:
-                plt.plot(xx[:,0],v[:,0] ,'k.-')
+                plt.plot(xx[:, 0], v[:, 0], "k.-")
             plt.title(pvar)
-            plt.pause(.001)
-
+            plt.pause(0.001)
 
 
 # Curve test.  Write file and print its name at the end
 if test:
-    v = ss.PyMPI.zbar( ss.variables[pvar].data )
-    v1d =  v[:,int(ny/2)]
-    x1d = xx[:,int(ny/2)]
-    fname = testName + '.dat'
-    numpy.savetxt( fname  , (x1d,v1d) )
+    v = ss.PyMPI.zbar(ss.variables[pvar].data)
+    v1d = v[:, int(ny / 2)]
+    x1d = xx[:, int(ny / 2)]
+    fname = testName + ".dat"
+    numpy.savetxt(fname, (x1d, v1d))
     print(fname)

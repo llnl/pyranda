@@ -1,32 +1,28 @@
-import numpy 
-import re
-import sys
-import time
-
+import numpy
 import matplotlib.pyplot as plt
-from pyranda.pyranda import pyrandaSim,pyrandaMPI
+from pyranda.pyranda import pyrandaSim
 
 
 ## Define a mesh
 Npts = 64
-L = numpy.pi * 2.0  
-Lp = L * (Npts-1.0) / Npts
+L = numpy.pi * 2.0
+Lp = L * (Npts - 1.0) / Npts
 
 mesh_options = {}
-mesh_options['type'] = 'cartesian'
-mesh_options['periodic'] = numpy.array([True, True, True])
-mesh_options['dim'] = 2
-mesh_options['x1'] = [ 0.0 , 0.0  ,  0.0 ]
-mesh_options['xn'] = [ Lp   , Lp    ,  Lp ]
-mesh_options['nn'] = [ Npts, Npts ,  1  ]
+mesh_options["type"] = "cartesian"
+mesh_options["periodic"] = numpy.array([True, True, True])
+mesh_options["dim"] = 2
+mesh_options["x1"] = [0.0, 0.0, 0.0]
+mesh_options["xn"] = [Lp, Lp, Lp]
+mesh_options["nn"] = [Npts, Npts, 1]
 
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim('advection',mesh_options)
+ss = pyrandaSim("advection", mesh_options)
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 ddt(:eta:)  = - ddx(:eta:*:u:) - ddy(:eta:*:v:)
 ddt(:ueta:) = - ddx(:ueta:*:u: + .5*:g:*:eta:**2) - ddy(:ueta:*:v:)
 ddt(:veta:) = - ddx(:veta:*:u:) - ddy(:veta:*:v: + .5*:g:*:eta:**2)
@@ -59,29 +55,27 @@ viz = True
 
 v = 1.0
 
-dt_max = v / ss.mesh.nn[0] * .75
+dt_max = v / ss.mesh.nn[0] * 0.75
 
-tt = L/v * .5 #dt_max
+tt = L / v * 0.5  # dt_max
 
 
-xx   =  ss.PyMPI.zbar( x )
-yy   =  ss.PyMPI.zbar( y )
+xx = ss.PyMPI.zbar(x)
+yy = ss.PyMPI.zbar(y)
 
 
 dt = dt_max
 cnt = 1
 while tt > time:
+    time = ss.rk4(time, dt)
+    dt = min(dt_max, (tt - time))
 
-    time = ss.rk4(time,dt)
-    dt = min(dt_max, (tt - time) )
-
-    ss.iprint("%s -- %s" % (cnt,time)  )
+    ss.iprint("%s -- %s" % (cnt, time))
     cnt += 1
     if viz:
-        phi = ss.PyMPI.zbar( ss.variables['eta'].data )
-        if ss.PyMPI.master and (cnt%10 == 0):
+        phi = ss.PyMPI.zbar(ss.variables["eta"].data)
+        if ss.PyMPI.master and (cnt % 10 == 0):
             plt.figure(2)
             plt.clf()
-            plt.contourf( xx,yy,phi ,32 )
-            plt.pause(.001)
-
+            plt.contourf(xx, yy, phi, 32)
+            plt.pause(0.001)

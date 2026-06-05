@@ -1,0 +1,22 @@
+name: Check lint and format
+on: [push, pull_request]
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        id: install
+        run: pip install ruff==0.15.14 # same version as requirements.txt
+
+      - name: Check python source formatting
+        run: ruff format --check .
+
+      - name: Lint python source
+        if: ${{ steps.install.outcome == 'success'  }}
+        run: ruff check .

@@ -1,51 +1,44 @@
-import re
-import sys
-import time
-import numpy 
-import matplotlib.pyplot as plt
-from matplotlib import cm
+import numpy
 
-from pyranda import pyrandaSim, pyrandaBC,pyrandaLEOS,pyrandaTimestep
-#from pyranda.pyranda import pyrandaRestart
-
+from pyranda import pyrandaSim, pyrandaBC, pyrandaLEOS, pyrandaTimestep
 
 ## Define a mesh
 L = numpy.pi * 2.0
 Npts = 200
-Lp = L * (Npts-1.0) / Npts
+Lp = L * (Npts - 1.0) / Npts
 
 imesh = """
 xdom = (0.0, Lp, Npts)
-""".replace('Lp',str(Lp)).replace('Npts',str(Npts))
+""".replace("Lp", str(Lp)).replace("Npts", str(Npts))
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim('sod',imesh)
-ss.addPackage( pyrandaBC(ss) )
-ss.addPackage( pyrandaTimestep(ss) )
+ss = pyrandaSim("sod", imesh)
+ss.addPackage(pyrandaBC(ss))
+ss.addPackage(pyrandaTimestep(ss))
 
 
 # LEOS package and materials
 eos = pyrandaLEOS(ss)
 matID = 70  # 70 - Nitrogen
 eos.addMaterial(matID)
-ss.addPackage( eos )
+ss.addPackage(eos)
 
-rho0 = eos.materials[matID]['rho0']
-T0   = 300.0
+rho0 = eos.materials[matID]["rho0"]
+T0 = 300.0
 
 ##  Look up pressure at these rho/T
-P0  = eos.materials[matID]['Pt'].eval( rho0 , T0 , N=1)[0]
-E0  = eos.materials[matID]['Et'].eval( rho0 , T0 , N=1)[0]
+P0 = eos.materials[matID]["Pt"].eval(rho0, T0, N=1)[0]
+E0 = eos.materials[matID]["Et"].eval(rho0, T0, N=1)[0]
 
 parms = {}
-parms['rho0'] = rho0
-parms['E0']   = E0
-parms['P0']   = P0
-parms['T0']   = T0
-parms['matID'] = matID
+parms["rho0"] = rho0
+parms["E0"] = E0
+parms["P0"] = P0
+parms["T0"] = T0
+parms["matID"] = matID
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)
@@ -80,7 +73,7 @@ bc.const(['u'],['x1','xn'],0.0)
 """
 
 # Add the EOM to the solver
-ss.EOM(eom,eomDict=parms)
+ss.EOM(eom, eomDict=parms)
 
 
 # Initial conditions SOD shock tube in 1d
@@ -95,56 +88,52 @@ ic = """
 """
 
 # Set the initial conditions
-ss.var('dt').data = 1.0e-10
-ss.setIC(ic,icDict=parms)
-    
+ss.var("dt").data = 1.0e-10
+ss.setIC(ic, icDict=parms)
 
 
 # Write a time loop
 time = 0.0
 
 # Approx a max dt and stopping time
-dt_max = ss.var('dt').data * 1.0
+dt_max = ss.var("dt").data * 1.0
 
-tt = 5.0e-6 #1000 * dt_max
+tt = 5.0e-6  # 1000 * dt_max
 
 # Start time loop
 dt = dt_max / 10.0
 cnt = 1
 viz_freq = 100
-pvar = 'rho'
+pvar = "rho"
 viz = True
 
-cplots = ['rho','p','u','T','ie']
+cplots = ["rho", "p", "u", "T", "ie"]
+
 
 def doPlots():
-    ifig = 1                     # Plot figure counter
-    for cc in cplots:            # Loops over plots
-        ss.plot.figure(ifig)     #   - make a new figure
-        ss.plot.clf()            #   - clear the figure
-        ss.plot.plot(cc,'k-o')  #   - plot a filled contour
-        ifig += 1 
+    ifig = 1  # Plot figure counter
+    for cc in cplots:  # Loops over plots
+        ss.plot.figure(ifig)  #   - make a new figure
+        ss.plot.clf()  #   - clear the figure
+        ss.plot.plot(cc, "k-o")  #   - plot a filled contour
+        ifig += 1
 
-        
-doPlots() 
+
+doPlots()
 
 while tt > time:
-
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = min(dt_max, (tt - time) )
-    
+    time = ss.rk4(time, dt)
+    dt = min(dt_max, (tt - time))
+
     # Print some output
-    ss.iprint("%s -- %s" % (cnt,time)  )
+    ss.iprint("%s -- %s" % (cnt, time))
     cnt += 1
     if viz:
-
-        if (cnt%viz_freq == 0):
+        if cnt % viz_freq == 0:
             doPlots()
-        
+
 
 doPlots()
 ss.writeGrid()
 ss.write()
-
-

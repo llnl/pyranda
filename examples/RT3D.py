@@ -1,9 +1,6 @@
-import re
 import sys
-import time
-import numpy 
+import numpy
 import matplotlib.pyplot as plt
-from matplotlib import cm
 
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 
@@ -11,80 +8,94 @@ from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
 # Try to get args for testing
 try:
     Npts = int(sys.argv[1])
-except:
+except Exception:
     Npts = 64
 
 try:
     is2D = bool(int(sys.argv[2]))
-except:
+except Exception:
     is2D = False
 
 try:
     test = bool(int(sys.argv[3]))
-except:
+except Exception:
     test = False
-
 
 
 ## Define a mesh
 if is2D:
-    problem = 'RT_2D'
-    imesh = """
+    problem = "RT_2D"
+    imesh = (
+        """
     xdom = (0.0, 2.8*pi , int(Npts*1.4), periodic=False) 
     ydom = (0.0, 2*pi*FF,  Npts, periodic=True)
     zdom = (0.0, 2*pi*FF,  1, periodic=True)
-    """.replace('Npts',str(Npts)).replace('pi',str(numpy.pi)).replace('FF',str( float(Npts-1)/Npts ) )
+    """.replace("Npts", str(Npts))
+        .replace("pi", str(numpy.pi))
+        .replace("FF", str(float(Npts - 1) / Npts))
+    )
     waveLength = 4
 else:
-    problem = 'RT_3D'
-    imesh = """
+    problem = "RT_3D"
+    imesh = (
+        """
     xdom = (0.0, 3.0*pi , int(Npts*1.5), periodic=False) 
     ydom = (0.0, 2*pi*FF,  Npts, periodic=True)
     zdom = (0.0, 2*pi*FF,  Npts, periodic=True)
-    """.replace('Npts',str(Npts)).replace('pi',str(numpy.pi)).replace('FF',str( float(Npts-1)/Npts ) )
+    """.replace("Npts", str(Npts))
+        .replace("pi", str(numpy.pi))
+        .replace("FF", str(float(Npts - 1) / Npts))
+    )
     waveLength = 4
-    
+
 rho_l = 1.0
 rho_h = 3.0
-mwH  = 3.0
-mwL  = 1.0
-gx    = -0.01
+mwH = 3.0
+mwL = 1.0
+gx = -0.01
 Runiv = 1.0
-CPh   = 1.4
-CVh   = 1.0
-CPl   = 1.4
-CVl   = 1.0
+CPh = 1.4
+CVh = 1.0
+CPl = 1.4
+CVl = 1.0
 
 
-parm_dict = {'gx':gx,
-             'CPh':CPh,'CPl':CPl,
-             'CVh':CVh,'CVl':CVl,
-             'mwH':mwH,'mwL':mwL,
-             'Runiv':Runiv,'waveLength':waveLength,
-             'rho_l':rho_l,'rho_h':rho_h,
-             'delta':2.0* numpy.pi / Npts * 4 }
+parm_dict = {
+    "gx": gx,
+    "CPh": CPh,
+    "CPl": CPl,
+    "CVh": CVh,
+    "CVl": CVl,
+    "mwH": mwH,
+    "mwL": mwL,
+    "Runiv": Runiv,
+    "waveLength": waveLength,
+    "rho_l": rho_l,
+    "rho_h": rho_h,
+    "delta": 2.0 * numpy.pi / Npts * 4,
+}
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim(problem,imesh)
-ss.addPackage( pyrandaTimestep(ss) )
-ss.addPackage( pyrandaBC(ss) )
+ss = pyrandaSim(problem, imesh)
+ss.addPackage(pyrandaTimestep(ss))
+ss.addPackage(pyrandaBC(ss))
 
 
 # User defined function to take mean of data and return it as 3d field, dataBar
-def meanXto3d(pysim,data):
-    meanX = pysim.PyMPI.yzsum( data ) / (pysim.PyMPI.ny * pysim.PyMPI.nz)
+def meanXto3d(pysim, data):
+    meanX = pysim.PyMPI.yzsum(data) / (pysim.PyMPI.ny * pysim.PyMPI.nz)
     tmp = pysim.emptyScalar()
-    for i in range( tmp.shape[0]):
-        ii = int( pysim.mesh.indices[0].data[i,0,0] )
-        tmp[i,:,:]  =  meanX[ii]
+    for i in range(tmp.shape[0]):
+        ii = int(pysim.mesh.indices[0].data[i, 0, 0])
+        tmp[i, :, :] = meanX[ii]
     return tmp
 
-ss.addUserDefinedFunction("xbar",meanXto3d)
 
+ss.addUserDefinedFunction("xbar", meanXto3d)
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rhoYh:)  =  -ddx(:rhoYh:*:u: - :Jx:)    - ddy(:rhoYh:*:v: - :Jy:)   - ddz(:rhoYh:*:w: - :Jz:)
 ddt(:rhoYl:)  =  -ddx(:rhoYl:*:u: + :Jx:)    - ddy(:rhoYl:*:v: + :Jy:)   - ddz(:rhoYl:*:w: + :Jz:)
@@ -179,7 +190,7 @@ bc.const(['u','v','w'],['x1','xn'],0.0)
 """
 
 # Add the EOM to the solver
-ss.EOM(eom,parm_dict)
+ss.EOM(eom, parm_dict)
 
 
 # Initialize variables
@@ -221,70 +232,76 @@ wgt = 4*:Yh:*:Yl:
 
 # Set the initial conditions
 numpy.random.seed(1234)
-ss.setIC(ic,parm_dict)
-    
+ss.setIC(ic, parm_dict)
+
 
 # Write a time loop
 time = 0.0
 
 # Start time loop
 CFL = 1.0
-dt = ss.variables['dt'].data * CFL
+dt = ss.variables["dt"].data * CFL
 
 # Viz/IO
 viz_freq = 20
 dmp_freq = 200
 
 tstop = 100.0
-dtmax = dt * .1
+dtmax = dt * 0.1
 
-outVars = ['p','u','v','w','rho','Yh']
-ss.write(outVars)
+outVars = ["p", "u", "v", "w", "rho", "Yh"]
+if not test:
+    ss.write(outVars)
 
-
-mixW  = []
+mixW = []
 timeW = []
 
+# numpy.trapz was renamed to numpy.trapezoid in NumPy 2.0. The old name still
+# exists in 2.x but is deprecated; the new name doesn't exist before 2.0.
+# Bind whichever this NumPy version offers.
+try:
+    _trapezoid = numpy.trapezoid
+except AttributeError:
+    _trapezoid = numpy.trapz
+
 while time < tstop:
-
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = ss.variables['dt'].data * CFL
-    dt = min( dt, dtmax*1.1)
-    dtmax = dt*1.0
+    time = ss.rk4(time, dt)
+    dt = ss.variables["dt"].data * CFL
+    dt = min(dt, dtmax * 1.1)
+    dtmax = dt * 1.0
 
-    umax = ss.var('u').mean()
-    ss.iprint("%s -- %s --- Umax: %s " % (ss.cycle,time,umax)  ) 
+    umax = ss.var("u").mean()
+    ss.iprint("%s -- %s --- Umax: %s " % (ss.cycle, time, umax))
 
-    if ( ss.cycle%viz_freq == 0):
-        mixW.append( numpy.trapezoid( ss.var('mix').mean( axis=[1,2] ) , ss.var('meshx')[:,0,0] )   )
-        timeW.append( time )
-    
+    if ss.cycle % viz_freq == 0:
+        mixW.append(
+            _trapezoid(ss.var("mix").mean(axis=[1, 2]), ss.var("meshx")[:, 0, 0])
+        )
+        timeW.append(time)
+
     if not test:
-        if ( ss.cycle%viz_freq == 0 ) :
-
+        if ss.cycle % viz_freq == 0:
             # 2D contour plots
             ss.plot.figure(1)
             ss.plot.clf()
-            ss.plot.contourf( 'rho', 32, cmap='jet')
+            ss.plot.contourf("rho", 32, cmap="jet")
 
             ss.plot.figure(2)
             ss.plot.clf()
-            ss.plot.plot('mix')
+            ss.plot.plot("mix")
 
-            
-        if ( ss.cycle%dmp_freq == 0) :
+        if ss.cycle % dmp_freq == 0:
             ss.write(outVars)
 
 
 if not test:
-
     if ss.PyMPI.master:
         plt.figure(3)
-        plt.plot(timeW,mixW)
-        plt.pause(.1)
-        
+        plt.plot(timeW, mixW)
+        plt.pause(0.1)
+
 else:
-    fname = problem + '.dat'
-    numpy.savetxt( fname  , (timeW,mixW) )
+    fname = problem + ".dat"
+    numpy.savetxt(fname, (timeW, mixW))
     print(fname)

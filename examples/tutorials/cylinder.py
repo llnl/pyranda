@@ -1,59 +1,61 @@
 import sys
-import numpy 
+import numpy
 from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep, pyrandaIBM
 
+sys.path.append("../")
+from meshTest import zoomMesh_solve
 
 
 ## Define a mesh
 Npts = 64
-L = numpy.pi * 2.0  
+L = numpy.pi * 2.0
 dim = 2
 gamma = 1.4
 
-problem = 'cylinder'
+problem = "cylinder"
 
-Lp = L * (Npts-1.0) / Npts
+Lp = L * (Npts - 1.0) / Npts
 
-sys.path.append('../')
-from meshTest import zoomMesh_solve
-dxf = 4*Lp / float(Npts) * .3
-xS = zoomMesh_solve(Npts,-2.*Lp,2.*Lp,-2.,2.,1.0,dxf)
+dxf = 4 * Lp / float(Npts) * 0.3
+xS = zoomMesh_solve(Npts, -2.0 * Lp, 2.0 * Lp, -2.0, 2.0, 1.0, dxf)
 
-def zoomMesh(i,j,k):
+
+def zoomMesh(i, j, k):
     x = xS[i]
     y = xS[j]
     z = 0.0
-    return x,y,z
+    return x, y, z
+
 
 mesh_options = {}
-mesh_options['coordsys'] = 3
-mesh_options['function'] = zoomMesh
-mesh_options['periodic'] = numpy.array([False, False, True])
-mesh_options['gridPeriodic'] = numpy.array([False, False, False])
-mesh_options['dim'] = 3
-mesh_options['x1'] = [ -2*Lp , -2*Lp  ,  0.0 ]
-mesh_options['xn'] = [ 2*Lp   , 2*Lp    ,  Lp ]
-mesh_options['nn'] = [ Npts, Npts ,  1  ]
+mesh_options["coordsys"] = 3
+mesh_options["function"] = zoomMesh
+mesh_options["periodic"] = numpy.array([False, False, True])
+mesh_options["gridPeriodic"] = numpy.array([False, False, False])
+mesh_options["dim"] = 3
+mesh_options["x1"] = [-2 * Lp, -2 * Lp, 0.0]
+mesh_options["xn"] = [2 * Lp, 2 * Lp, Lp]
+mesh_options["nn"] = [Npts, Npts, 1]
 
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim(problem,mesh_options)
-ss.addPackage( pyrandaBC(ss) )
-ss.addPackage( pyrandaIBM(ss) )
-ss.addPackage( pyrandaTimestep(ss) )
+ss = pyrandaSim(problem, mesh_options)
+ss.addPackage(pyrandaBC(ss))
+ss.addPackage(pyrandaIBM(ss))
+ss.addPackage(pyrandaTimestep(ss))
 
 
 rho0 = 1.0
-p0   = 1.0
+p0 = 1.0
 gamma = 1.4
 mach = 2.0
-s0 = numpy.sqrt( p0 / rho0 * gamma )
+s0 = numpy.sqrt(p0 / rho0 * gamma)
 u0 = s0 * mach
-e0 = p0/(gamma-1.0) + rho0*.5*u0*u0
+e0 = p0 / (gamma - 1.0) + rho0 * 0.5 * u0 * u0
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -div(:rho:*:u:,  :rho:*:v:)
 ddt(:rhou:) =  -div(:rhou:*:u: + :p: - :tau:, :rhou:*:v:)
@@ -95,7 +97,7 @@ bc.const(['p'],['x1','y1','yn'],p0)
 :dt: = numpy.minimum(:dt:,:dtB:)
 :umag: = sqrt( :u:*:u: + :v:*:v: )
 """
-eom = eom.replace('u0',str(u0)).replace('p0',str(p0)).replace('rho0',str(rho0))
+eom = eom.replace("u0", str(u0)).replace("p0", str(p0)).replace("rho0", str(rho0))
 
 
 # Add the EOM to the solver
@@ -126,42 +128,39 @@ rad = sqrt( meshx**2  +  meshy**2 )
 :gx: = gbar( :gx: )
 :gy: = gbar( :gy: )
 """
-ic = ic.replace('mach',str(mach))
+ic = ic.replace("mach", str(mach))
 
 # Set the initial conditions
 ss.setIC(ic)
-    
+
 
 # Write a time loop
 time = 0.0
 viz = True
 
 # Approx a max dt and stopping time
-tt = 3.0 #
+tt = 3.0  #
 
 # Start time loop
 cnt = 1
 viz_freq = 100
-pvar = 'umag'
+pvar = "umag"
 
 CFL = 1.0
-dt = ss.var('dt').data * CFL*.01
-wvars = ['p','rho','u','v','phi']
-ss.write( wvars )
+dt = ss.var("dt").data * CFL * 0.01
+wvars = ["p", "rho", "u", "v", "phi"]
+ss.write(wvars)
 while tt > time:
-    
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = min( ss.variables['dt'].data * CFL, dt*1.1)
-    dt = min(dt, (tt - time) )
-    
+    time = ss.rk4(time, dt)
+    dt = min(ss.variables["dt"].data * CFL, dt * 1.1)
+    dt = min(dt, (tt - time))
+
     # Print some output
-    ss.iprint("%s -- %s --- %f" % (cnt,time,dt)  )
+    ss.iprint("%s -- %s --- %f" % (cnt, time, dt))
     cnt += 1
-    if (cnt%viz_freq == 1) :
+    if cnt % viz_freq == 1:
         ss.write(wvars)
-        
+
 
 ss.writeRestart()
-            
-

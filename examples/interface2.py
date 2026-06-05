@@ -1,37 +1,30 @@
-from mpi4py import MPI
-import numpy 
-import re
-import sys
-import time
-# TODO: remove 
-#sys.path.append('/Users/olson45/Research/FloATPy')
+import numpy
 import matplotlib.pyplot as plt
-from pyranda import pyrandaSim, pyrandaMPI, pyrandaIBM
-
+from pyranda import pyrandaSim, pyrandaIBM
 
 
 ## Define a mesh
 Npts = 128
-L = numpy.pi * 2.0  
-Lp = L * (Npts-1.0) / Npts
+L = numpy.pi * 2.0
+Lp = L * (Npts - 1.0) / Npts
 
 mesh_options = {}
-mesh_options['type'] = 'cartesian'
-mesh_options['periodic'] = numpy.array([False, True, True])
-mesh_options['dim'] = 3
-mesh_options['x1'] = [ 0.0 , 0.0  ,  0.0 ]
-mesh_options['xn'] = [ Lp   , Lp    ,  Lp ]
-mesh_options['nn'] = [ Npts, 1 ,  1  ]
-#mesh_options['nn'] = [ Npts, Npts ,  1  ]
+mesh_options["type"] = "cartesian"
+mesh_options["periodic"] = numpy.array([False, True, True])
+mesh_options["dim"] = 3
+mesh_options["x1"] = [0.0, 0.0, 0.0]
+mesh_options["xn"] = [Lp, Lp, Lp]
+mesh_options["nn"] = [Npts, 1, 1]
+# mesh_options['nn'] = [ Npts, Npts ,  1  ]
 
 
 # Initialize a simulation object on a mesh
-ss = pyrandaSim('advection',mesh_options)
-ss.addPackage( pyrandaIBM(ss) )
+ss = pyrandaSim("advection", mesh_options)
+ss.addPackage(pyrandaIBM(ss))
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)                  - ddy(:rho:*:v:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)   - ddy(:rhou:*:v:)
@@ -86,23 +79,25 @@ y = ss.mesh.coords[1].data
 z = ss.mesh.coords[2].data
 
 
-rad = numpy.sqrt( (x-numpy.pi)**2 ) # + (y-numpy.pi)**2 ) #+ (z-numpy.pi)**2  )
-ss.variables['Et'].data +=  2.5
-ss.variables['rho'].data += 1.0
+rad = numpy.sqrt((x - numpy.pi) ** 2)  # + (y-numpy.pi)**2 ) #+ (z-numpy.pi)**2  )
+ss.variables["Et"].data += 2.5
+ss.variables["rho"].data += 1.0
 
-ss.variables['EtA'].data += 2.5
-ss.variables['rhoA'].data += 10.0e1 * (1.0 + .1*numpy.exp(-(x-numpy.pi*1.5)**2/.01)  )
+ss.variables["EtA"].data += 2.5
+ss.variables["rhoA"].data += 10.0e1 * (
+    1.0 + 0.1 * numpy.exp(-((x - numpy.pi * 1.5) ** 2) / 0.01)
+)
 
 # Init momenta
-ss.variables['rhou'].data   = ss.variables['rho'].data * .70
-ss.variables['rhoAuA'].data = ss.variables['rhoA'].data * .70
-ss.variables['u1'].data = .70
+ss.variables["rhou"].data = ss.variables["rho"].data * 0.70
+ss.variables["rhoAuA"].data = ss.variables["rhoA"].data * 0.70
+ss.variables["u1"].data = 0.70
 
-ss.variables['dx'].data += (x[1,0,0] - x[0,0,0])
-ss.variables['dx6'].data += (x[1,0,0] - x[0,0,0])**6
+ss.variables["dx"].data += x[1, 0, 0] - x[0, 0, 0]
+ss.variables["dx6"].data += (x[1, 0, 0] - x[0, 0, 0]) ** 6
 
 # Define the interface location
-ss.variables['phi'].data = 3.14159 - x
+ss.variables["phi"].data = 3.14159 - x
 
 
 time = 0.0
@@ -112,34 +107,30 @@ v = 1.0
 
 dt_max = v / ss.mesh.nn[0] * 1.0
 
-tt = L/v * .25 #dt_max
+tt = L / v * 0.25  # dt_max
 
-xx   =  ss.PyMPI.zbar( x )
-yy   =  ss.PyMPI.zbar( y )
+xx = ss.PyMPI.zbar(x)
+yy = ss.PyMPI.zbar(y)
 
 dt = dt_max
 cnt = 1
 
 
 while tt > time:
+    time = ss.rk4(time, dt)
+    dt = min(dt_max, (tt - time))
 
-    time = ss.rk4(time,dt)
-    dt = min(dt_max, (tt - time) )
-
-    ss.iprint("%s -- %s" % (cnt,time)  )
+    ss.iprint("%s -- %s" % (cnt, time))
     cnt += 1
     if viz:
-        #v1 = ss.PyMPI.zbar( ss.variables['rhoA'].data )
-        v2 = ss.PyMPI.zbar( ss.variables['rhoT'].data )
-        if ss.PyMPI.master and (cnt%5 == 0) and True:
+        # v1 = ss.PyMPI.zbar( ss.variables['rhoA'].data )
+        v2 = ss.PyMPI.zbar(ss.variables["rhoT"].data)
+        if ss.PyMPI.master and (cnt % 5 == 0) and True:
             plt.figure(2)
             plt.clf()
-            #plt.contourf( xx,yy,phi ,64 )
-            #plt.plot(xx[:,0],v1[:,0] ,'b.-')
-            plt.plot(xx[:,0],v2[:,0] ,'k.-')
-            plt.pause(.001)
-            #import pdb
-            #pdb.set_trace()
-
-
-
+            # plt.contourf( xx,yy,phi ,64 )
+            # plt.plot(xx[:,0],v1[:,0] ,'b.-')
+            plt.plot(xx[:, 0], v2[:, 0], "k.-")
+            plt.pause(0.001)
+            # import pdb
+            # pdb.set_trace()

@@ -1,34 +1,32 @@
-import re
-import sys
-import time
-import numpy 
+import numpy
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-from pyranda import pyrandaSim, pyrandaBC, pyrandaTimestep
+from pyranda import pyrandaSim, pyrandaTimestep
 
 
-
-
-
-problem = '3D Advection'
+problem = "3D Advection"
 
 ## Define a mesh
 Npts = 32
-imesh = """
+imesh = (
+    """
 xdom = (0.0, 2*pi*FF,  Npts, periodic=True)
 ydom = (0.0, 2*pi*FF,  Npts, periodic=True)
 zdom = (0.0, 2*pi*FF,  Npts, periodic=True)
-""".replace('Npts',str(Npts)).replace('pi',str(numpy.pi)).replace('FF',str( float(Npts-1)/Npts ) )
+""".replace("Npts", str(Npts))
+    .replace("pi", str(numpy.pi))
+    .replace("FF", str(float(Npts - 1) / Npts))
+)
 
-    
+
 # Initialize a simulation object on a mesh
-ss = pyrandaSim(problem,imesh)
-ss.addPackage( pyrandaTimestep(ss) )
+ss = pyrandaSim(problem, imesh)
+ss.addPackage(pyrandaTimestep(ss))
 
 
 # Define the equations of motion
-eom ="""
+eom = """
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u:)                  - ddy(:rho:*:v:)                  - ddz(:rho:*:w:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tauxx:) - ddy(:rhou:*:v: - :tauxy:)       - ddz(:rhou:*:w: - :tauxz:)
@@ -102,7 +100,7 @@ rad = sqrt( (meshx-pi)**2 + (meshy-pi)**2 + (meshz-pi)**2 )
 
 # Set the initial conditions
 ss.setIC(ic)
-    
+
 # Length scale for art. viscosity
 # Initialize variables
 x = ss.mesh.coords[0].data
@@ -118,79 +116,74 @@ viz = True
 
 
 # Mesh for viz on master
-xx   =  ss.PyMPI.zbar( x ) / Npts
-yy   =  ss.PyMPI.zbar( y ) / Npts
-#xx   =   x[:,:,16] / Npts
-#yy   =   y[:,:,16] / Npts
+xx = ss.PyMPI.zbar(x) / Npts
+yy = ss.PyMPI.zbar(y) / Npts
+# xx   =   x[:,:,16] / Npts
+# yy   =   y[:,:,16] / Npts
 ny = ss.PyMPI.ny
 
 # Start time loop
 CFL = 0.5
-dt = ss.variables['dt'].data * CFL
+dt = ss.variables["dt"].data * CFL
 
 # Viz
 cnt = 1
 viz_freq = 10
-pvar = 'rho'
+pvar = "rho"
 
-tke0 = ss.var('tke').sum()
-enst0 = ss.var('enst').sum()
+tke0 = ss.var("tke").sum()
+enst0 = ss.var("enst").sum()
 TKE = []
 ENST = []
 TIME = []
 
 
-f1 = numpy.sin( x )
-ddx1 = numpy.cos( x )
-ddx2 = ss.ddx( f1 )
-f2 = ss.gfilter( f1 )
+f1 = numpy.sin(x)
+ddx1 = numpy.cos(x)
+ddx2 = ss.ddx(f1)
+f2 = ss.gfilter(f1)
 
-error = ( ddx1 - ddx2 )
-Ferror = ( f1 - f2 )
+error = ddx1 - ddx2
+Ferror = f1 - f2
 
 
-e1d = ss.PyMPI.zbar( error )[:,0] / Npts
-f1d = ss.PyMPI.zbar( Ferror )[:,0] / Npts
-x1d = ss.PyMPI.zbar( x     )[:,0] / Npts
-if (ss.PyMPI.master):
+e1d = ss.PyMPI.zbar(error)[:, 0] / Npts
+f1d = ss.PyMPI.zbar(Ferror)[:, 0] / Npts
+x1d = ss.PyMPI.zbar(x)[:, 0] / Npts
+if ss.PyMPI.master:
     plt.figure()
-    plt.plot( x1d, e1d ,'b')
-    plt.plot( x1d, f1d , 'k' )
+    plt.plot(x1d, e1d, "b")
+    plt.plot(x1d, f1d, "k")
 
 while time < 10.0:
-
     # Update the EOM and get next dt
-    time = ss.rk4(time,dt)
-    dt = ss.variables['dt'].data * CFL
+    time = ss.rk4(time, dt)
+    dt = ss.variables["dt"].data * CFL
 
     # Print some output
-    tke = ss.var('tke').sum()/tke0
-    enst = ss.var('enst').sum()/enst0
+    tke = ss.var("tke").sum() / tke0
+    enst = ss.var("enst").sum() / enst0
 
     TIME.append(time)
     ENST.append(enst)
     TKE.append(tke)
-    
-    
-    ss.iprint("%s -- %s --- TKE: %s " % (cnt,time,tke)  )
+
+    ss.iprint("%s -- %s --- TKE: %s " % (cnt, time, tke))
     cnt += 1
     if viz:
-
-        dd = numpy.where( z == 0.0, 1.0, 0.0 )
-        v = ss.PyMPI.zbar( dd*ss.variables[pvar].data )
-        #v = ss.variables[pvar].data[:,:,16]
-        if (ss.PyMPI.master and (cnt%viz_freq == 0)) and True:
+        dd = numpy.where(z == 0.0, 1.0, 0.0)
+        v = ss.PyMPI.zbar(dd * ss.variables[pvar].data)
+        # v = ss.variables[pvar].data[:,:,16]
+        if (ss.PyMPI.master and (cnt % viz_freq == 0)) and True:
             plt.figure(2)
-            plt.clf()            
-            plt.contourf( xx,yy,v ,64 , cmap=cm.jet)
+            plt.clf()
+            plt.contourf(xx, yy, v, 64, cmap=cm.jet)
             plt.title(pvar)
-            plt.pause(.001)
+            plt.pause(0.001)
 
 
-
-if (ss.PyMPI.master):
+if ss.PyMPI.master:
     plt.figure()
-    plt.plot(TIME,TKE,'k--')
-    plt.plot(TIME,ENST,'b--')
-    plt.show()            
-
+    plt.plot(TIME, TKE, "k--")
+    plt.plot(TIME, ENST, "b--")
+    plt.show()
